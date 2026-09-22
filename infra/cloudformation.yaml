@@ -1,0 +1,327 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  AWS User Group Minatitlan - Red Team Security Lab
+  Demostracion practica de malas configuraciones comunes en AWS y su explotacion.
+  Recursos 100% elegibles para Free Tier (VPC basica, EC2 t3.micro/t2.micro, S3, IAM).
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: lab-red-team
+    Description: Nombre prefijo para los recursos del laboratorio.
+
+  AdminIP:
+    Type: String
+    Default: 0.0.0.0/0
+    Description: >
+      CIDR para el Security Group. Por defecto 0.0.0.0/0 para ilustrar
+      el error tipico de exposicion total de puertos de gestion.
+
+  InstanceType:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t3.micro
+    Description: Tipo de instancia EC2 elegible para AWS Free Tier (t2.micro por defecto).
+
+  LatestAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64'
+    Description: AMI de Amazon Linux 2023 mas reciente.
+
+Resources:
+  # ============================================================================
+  # 1. RED (VPC, Subred Publica, Internet Gateway, Tabla de Ruteo)
+  # ============================================================================
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-vpc'
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-igw'
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-public-subnet'
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-public-rt'
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  # ============================================================================
+  # 2. MALAS CONFIGURACIONES DE RED: SECURITY GROUP PERMISIVO (0.0.0.0/0)
+  # ============================================================================
+  VulnerableSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub 'Security Group vulnerable para ${ProjectName}'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: 'Servidor Web demo (Vulnerable a SSRF)'
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref AdminIP
+          Description: 'DESCUIDO TIPICO: SSH abierto a todo Internet (0.0.0.0/0)'
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-sg-vulnerable'
+
+  # ============================================================================
+  # 3. IDENTIDAD (IAM): ROL SOBREPRIVILEGIADO
+  # ============================================================================
+  VulnerableInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectName}-ec2-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: OverlyPermissiveS3AndEC2Policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:ListAllMyBuckets'
+                  - 's3:ListBucket'
+                  - 's3:GetObject'
+                  - 'ec2:Describe*'
+                  - 'iam:ListRoles'
+                Resource: '*'
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-role'
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref VulnerableInstanceRole
+
+  # ============================================================================
+  # 4. ALMACENAMIENTO: BUCKET S3 EXPUESTO CON DATOS SIMULADOS
+  # ============================================================================
+  ExposedDataBucket:
+    Type: AWS::EC2::Tag # Dummy marker tag helper, but let's create S3 bucket properly
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${ProjectName}-public-data-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-exposed-bucket'
+
+  ExposedBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ExposedDataBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Sub '${ExposedDataBucket.Arn}/*'
+
+  # ============================================================================
+  # 5. COMPUTO: INSTANCIA EC2 CON IMDSv1 HABILITADO Y APP WEB VULNERABLE A SSRF
+  # ============================================================================
+  VulnerableEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref LatestAmiId
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref VulnerableSecurityGroup
+      IamInstanceProfile: !Ref InstanceProfile
+      # DESCUIDO CLAVE: IMDSv2 opcional (IMDSv1 permitido / HttpTokens=optional)
+      MetadataOptions:
+        HttpEndpoint: enabled
+        HttpTokens: optional
+        HttpPutResponseHopLimit: 1
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          dnf update -y
+          dnf install -y python3 python3-pip
+          pip3 install flask requests
+
+          # Crear datos simulados en S3
+          cat << 'EOF' > /tmp/factura_sat_ejemplo.xml
+          <?xml version="1.0" encoding="UTF-8"?>
+          <cfdi:Comprobante Version="4.0" Total="45200.00" Moneda="MXN" xmlns:cfdi="http://www.sat.gob.mx/cfd/4">
+            <cfdi:Emisor Rfc="PME120304AA1" Nombre="PYME SERVICIOS CLOUD MEXICO SA DE CV"/>
+            <cfdi:Receptor Rfc="XAXX010101000" Nombre="PUBLICO EN GENERAL"/>
+            <cfdi:Conceptos>
+              <cfdi:Concepto Descripcion="Auditoria de Sistemas y Respaldos" Importe="45200.00"/>
+            </cfdi:Conceptos>
+          </cfdi:Comprobante>
+          EOF
+
+          cat << 'EOF' > /tmp/backup_db_clientes.sql
+          -- DUMP DE BASE DE DATOS DE CLIENTES (SIMULACION LAB)
+          -- Fecha: 2026-09-19
+          INSERT INTO clientes (nombre, curp, telefono, email, saldo) VALUES
+          ('Juan Perez Lopez', 'PELJ880101HDFR02', '5512345678', 'juan.perez@empresa.mx', 12500.00),
+          ('Maria Rodriguez Gomez', 'ROGM920415MVER09', '2299876543', 'maria.rodriguez@veracruz.gob.mx', 48000.00);
+          EOF
+
+          aws s3 cp /tmp/factura_sat_ejemplo.xml s3://${ExposedDataBucket}/facturas/factura_sat_ejemplo.xml --region ${AWS::Region} || true
+          aws s3 cp /tmp/backup_db_clientes.sql s3://${ExposedDataBucket}/backups/backup_db_clientes.sql --region ${AWS::Region} || true
+
+          # App web vulnerable a SSRF (Simula una funcionalidad de 'Vista previa de URLs / Descargador')
+          cat << 'EOF' > /home/ec2-user/app.py
+          from flask import Flask, request, render_template_string
+          import requests
+
+          app = Flask(__name__)
+
+          HTML_TEMPLATE = '''
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+              <meta charset="UTF-8">
+              <title>Portal Corporativo - Verificador de URLs</title>
+              <style>
+                  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 40px; background: #0f172a; color: #e2e8f0; }
+                  .card { background: #1e293b; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5); max-width: 950px; width: 95%; margin: 0 auto; }
+                  h1 { color: #38bdf8; font-size: 1.6rem; margin-top: 0; }
+                  .tag { background: #dc2626; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+                  input[type=text] { width: 100%; padding: 12px; margin: 12px 0; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; box-sizing: border-box; }
+                  button { background: #0284c7; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+                  button:hover { background: #0369a1; }
+                  pre { background: #020617; padding: 18px; border-radius: 8px; overflow: auto; max-height: 520px; color: #4ade80; border: 1px solid #334155; font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap; word-break: break-all; }
+                  .alert { margin-top: 15px; padding: 10px; background: #334155; border-radius: 6px; font-size: 0.85rem; color: #94a3b8; }
+              </style>
+          </head>
+          <body>
+              <div class="card">
+                  <span class="tag">LAB RED TEAM - AWS UG MINATITLÁN</span>
+                  <h1>Herramienta Interna de Verificación Web</h1>
+                  <p>Ingresa una URL externa para obtener su vista previa y estado HTTP:</p>
+                  <form method="GET">
+                      <input type="text" name="url" placeholder="http://ejemplo.com" value="{{ url }}">
+                      <button type="submit">Probar Conectividad</button>
+                  </form>
+
+                  {% if response_text %}
+                      <h3>Resultado de la solicitud:</h3>
+                      <pre>{{ response_text }}</pre>
+                  {% endif %}
+
+                  <div class="alert">
+                      ℹ️ <strong>Atención:</strong> Este servicio realiza solicitudes HTTP directamente desde la instancia EC2.
+                  </div>
+              </div>
+          </body>
+          </html>
+          '''
+
+          @app.route('/')
+          def index():
+              target_url = request.args.get('url', '')
+              response_text = ''
+              if target_url:
+                  try:
+                      # VULNERABILIDAD SSRF: Peticion sin sanitizar ni restringir IPs locales (169.254.169.254)
+                      res = requests.get(target_url, timeout=3)
+                      response_text = res.text
+                  except Exception as e:
+                      response_text = f"Error al consultar la URL: {str(e)}"
+              return render_template_string(HTML_TEMPLATE, url=target_url, response_text=response_text)
+
+          if __name__ == '__main__':
+              app.run(host='0.0.0.0', port=80)
+          EOF
+
+          # Ejecutar app en segundo plano
+          python3 /home/ec2-user/app.py > /home/ec2-user/app.log 2>&1 &
+
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-ec2-vulnerable'
+
+Outputs:
+  InstancePublicIP:
+    Description: IP Publica de la instancia EC2 vulnerable
+    Value: !GetAtt VulnerableEC2Instance.PublicIp
+
+  AppURL:
+    Description: URL de la aplicacion web con SSRF demostrativo
+    Value: !Sub 'http://${VulnerableEC2Instance.PublicIp}'
+
+  ExposedS3BucketName:
+    Description: Nombre del bucket S3 publico
+    Value: !Ref ExposedDataBucket
+
+  ExposedS3BucketURL:
+    Description: URL publica para probar acceso a facturas
+    Value: !Sub 'https://${ExposedDataBucket}.s3.${AWS::Region}.amazonaws.com/facturas/factura_sat_ejemplo.xml'
+
+  IAMRoleName:
+    Description: Rol de IAM asignado a la instancia EC2
+    Value: !Ref VulnerableInstanceRole

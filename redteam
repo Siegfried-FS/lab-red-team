@@ -1,0 +1,168 @@
+#!/usr/bin/env python3
+"""
+AWS Red Team Lab - Asistente Interactivo CLI
+Creado para: Presentacion como Speaker Invitado en AWS User Group Minatitlan
+Speaker: Roberto Flores Segundo (Siegfried) - Lider AWS User Group Playa Vicente
+"""
+import os
+import sys
+import subprocess
+import json
+import readline  # Habilita Backspace, flechas y Delete en el input interactivo
+
+RED = "\033[91m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
+MAGENTA = "\033[95m"
+CYAN = "\033[96m"
+BOLD = "\033[1m"
+RESET = "\033[0m"
+
+BANNER = f"""{RED}{BOLD}
+   ██████╗ ███████╗██████╗     ████████╗███████╗ █████╗ ███╗   ███╗
+   ██╔══██╗██╔════╝██╔══██╗    ╚══██╔══╝██╔════╝██╔══██╗████╗ ████║
+   ██████╔╝█████╗  ██║  ██║       ██║   █████╗  ███████║██╔████╔██║
+   ██╔══██╗██╔══╝  ██║  ██║       ██║   ██╔══╝  ██╔══██║██║╚██╔╝██║
+   ██║  ██║███████╗██████╔╝       ██║   ███████╗██║  ██║██║ └──═██║
+    ╚═╝  ╚═╝╚══════╝╚═════╝        ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝
+{RESET}  {YELLOW}[+] AWS Cloud Red Team & Blue Defense Lab - Automation Assistant{RESET}
+========================================================================="""
+
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def get_aws_identity():
+    try:
+        res = subprocess.run(["aws", "sts", "get-caller-identity", "--output", "json"],
+                             capture_output=True, text=True, check=True)
+        data = json.loads(res.stdout)
+        region = subprocess.run(["aws", "configure", "get", "region"],
+                                capture_output=True, text=True).stdout.strip() or "us-east-1"
+        return True, data.get("Account"), data.get("Arn"), region
+    except Exception as e:
+        return False, None, None, None
+
+def print_menu():
+    print(BANNER)
+    ok, account, arn, region = get_aws_identity()
+    profile = os.environ.get("AWS_PROFILE", "default")
+    if ok:
+        print(f"  {GREEN}[*] Sesion AWS Activa:{RESET} Perfil: {MAGENTA}{profile}{RESET} | Cuenta: {BOLD}{account}{RESET} | Region: {CYAN}{region}{RESET}")
+        print(f"  {YELLOW}[*] Identidad ARN:{RESET}     {arn}")
+    else:
+        print(f"  {RED}[!] Sesion AWS (Perfil: {profile}):{RESET} No se detectaron credenciales validas (ejecuta 'export AWS_PROFILE=...' o 'aws configure')")
+    print("=========================================================================")
+    print(f"\n{BOLD}Selecciona una opcion del laboratorio:{RESET}\n")
+    print(f"  {CYAN}[1]{RESET}  {BOLD}Desplegar Laboratorio{RESET} (VPC, S3 vulnerable, EC2 SSRF, IAM sobreprivilegiado)")
+    print(f"  {CYAN}[2]{RESET}  {BOLD}Fase 1 (Red Team):{RESET} Auditoría s3scanner y Exfiltración de S3 (Facturas/SQL)")
+    print(f"  {CYAN}[2b]{RESET} {BOLD}Escanear Wordlist con s3scanner{RESET} (wordlist_s3_mexico.txt)")
+    print(f"  {CYAN}[3]{RESET}  {BOLD}Fase 2 (Red Team):{RESET} Explotar SSRF web y robar credenciales IMDSv1")
+    print(f"  {CYAN}[4]{RESET}  {BOLD}Fase 3 (Red Team):{RESET} Movimiento lateral y reconocimiento con llaves robadas")
+    print(f"  {CYAN}[5]{RESET}  {BOLD}Auditoria CloudTrail:{RESET} Management Events vs Data Events")
+    print(f"  {CYAN}[6]{RESET}  {BOLD}Modo Blue Team:{RESET} Aplicar remediaciones en vivo (IMDSv2 + S3 BPA + SSM)")
+    print(f"  {CYAN}[7]{RESET}  {BOLD}Security Headers:{RESET} Analizar cabeceras HTTP (Amplify / customHttp.yml)")
+    print(f"  {CYAN}[8]{RESET}  {BOLD}Ver Estado del Stack / Recursos desplegados{RESET}")
+    print(f"  {CYAN}[9]{RESET}  {BOLD}Abrir Presentacion Interactiva en HTML{RESET} (slides.html - Modo F pantalla completa)")
+    print(f"  {CYAN}[10]{RESET} {BOLD}Destruir Laboratorio{RESET} (Limpieza total de recursos en la cuenta)")
+    print(f"  {RED}[0]{RESET}  Salir")
+    print(f"\n{YELLOW}-------------------------------------------------------------------------{RESET}")
+
+def main():
+    root_dir = os.path.dirname(os.path.abspath(__file__))
+    scripts_dir = os.path.join(root_dir, "scripts")
+
+    while True:
+        clear_screen()
+        print_menu()
+        choice = input(f"{BOLD}redteam > {RESET}").strip()
+
+        if choice == "1":
+            subprocess.run(["bash", os.path.join(scripts_dir, "deploy.sh")])
+            input(f"\n{GREEN}Presiona Enter para volver al menu...{RESET}")
+
+        elif choice == "2":
+            subprocess.run(["python3", os.path.join(scripts_dir, "01_explotar_s3.py")])
+            input(f"\n{GREEN}Presiona Enter para volver al menu...{RESET}")
+
+        elif choice == "2b" or choice == "s3scanner":
+            wordlist = os.path.join(scripts_dir, "wordlist_s3_mexico.txt")
+            print(f"\n{BOLD}{CYAN}[*] Ejecutando: s3scanner scan --buckets-file {wordlist}{RESET}\n")
+            subprocess.run(["s3scanner", "scan", "--buckets-file", wordlist])
+            input(f"\n{GREEN}Presiona Enter para volver al menu...{RESET}")
+
+        elif choice == "3":
+            subprocess.run(["python3", os.path.join(scripts_dir, "02_explotar_ssrf_imds.py")])
+            input(f"\n{GREEN}Presiona Enter para volver al menu...{RESET}")
+
+        elif choice == "4":
+            subprocess.run(["python3", os.path.join(scripts_dir, "03_movimiento_lateral.py")])
+            input(f"\n{GREEN}Presiona Enter para volver al menu...{RESET}")
+
+        elif choice == "5":
+            subprocess.run(["python3", os.path.join(scripts_dir, "05_auditoria_cloudtrail.py")])
+            input(f"\n{GREEN}Presiona Enter para volver al menu...{RESET}")
+
+        elif choice == "6":
+            subprocess.run(["python3", os.path.join(scripts_dir, "04_blue_remediation.py")])
+            input(f"\n{GREEN}Presiona Enter para volver al menu...{RESET}")
+
+        elif choice == "7":
+            subprocess.run(["python3", os.path.join(scripts_dir, "06_analizar_headers.py")])
+            input(f"\n{GREEN}Presiona Enter para volver al menu...{RESET}")
+
+        elif choice == "8":
+            print(f"\n{CYAN}[*] Consultando estado del stack 'lab-red-team'...{RESET}\n")
+            subprocess.run([
+                "aws", "cloudformation", "describe-stacks",
+                "--stack-name", "lab-red-team",
+                "--query", "Stacks[0].[StackName,StackStatus,Outputs]",
+                "--output", "yaml"
+            ])
+            input(f"\n{GREEN}Presiona Enter para volver al menu...{RESET}")
+
+        elif choice == "9":
+            import webbrowser
+            slides_path = os.path.join(root_dir, "presentacion", "slides.html")
+            if not os.path.exists(slides_path):
+                slides_path = os.path.join(root_dir, "presentacion", "presentacion_v2.html")
+            
+            abs_url = f"file://{os.path.abspath(slides_path)}"
+            print(f"\n{GREEN}{BOLD}[+] Abriendo Presentacion Interactiva en tu navegador...{RESET}")
+            print(f"    {CYAN}{BOLD}{abs_url}{RESET}\n")
+            print(f"    {YELLOW}Nota: Puedes presionar la tecla 'F' en el navegador para pantalla completa.{RESET}")
+            
+            opened = False
+            try:
+                opened = webbrowser.open(abs_url)
+            except Exception:
+                pass
+            
+            if not opened:
+                try:
+                    subprocess.Popen(["xdg-open", abs_url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                except Exception:
+                    try:
+                        subprocess.Popen(["google-chrome", abs_url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    except Exception:
+                        pass
+            
+            input(f"\n{GREEN}Presiona Enter para volver al menu...{RESET}")
+
+        elif choice == "10":
+            confirm = input(f"{RED}{BOLD}¿Confirmas que deseas destruir TODOS los recursos del laboratorio? (s/n): {RESET}").strip().lower()
+            if confirm in ["s", "si", "y", "yes"]:
+                subprocess.run(["bash", os.path.join(scripts_dir, "destroy.sh")])
+            else:
+                print("Operacion cancelada.")
+            input(f"\n{GREEN}Presiona Enter para volver al menu...{RESET}")
+
+        elif choice == "0":
+            print(f"\n{CYAN}Sesion finalizada.{RESET}\n")
+            break
+        else:
+            print(f"{RED}Opcion no valida.{RESET}")
+            input("Presiona Enter...")
+
+if __name__ == "__main__":
+    main()

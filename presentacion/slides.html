@@ -1,0 +1,2552 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu Nube Expuesta v2 | Edición Veracruz: Playa Vicente × Minatitlán</title>
+  
+  <!-- Tailwind CSS & Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  
+  <!-- Tipografias Profesionales -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              dark: '#0c0827',
+              card: 'rgba(20, 12, 45, 0.88)',
+              cyan: '#00f0ff',
+              orange: '#ff9900',
+              red: '#ff3366',
+              emerald: '#10b981',
+              purple: '#8b5cf6',
+              border: 'rgba(168, 85, 247, 0.22)'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            heading: ['"Space Grotesk"', 'sans-serif'],
+            outfit: ['"Outfit"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+        html {
+      font-size: 15px;
+    }
+    @media (min-width: 1200px) {
+      html {
+        font-size: 16px;
+      }
+    }
+    @media (min-width: 1500px) {
+      html {
+        font-size: 16.5px;
+      }
+    }
+    body {
+      background-color: #0b0624;
+      color: #f1f5f9;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      user-select: none;
+    }
+
+    /* Canvas dinamico z-0 */
+    #cyber-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Fondo ambiental con gradientes y cuadricula sutil */
+    .ambient-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      background: 
+        radial-gradient(circle at 85% 15%, rgba(168, 85, 247, 0.18) 0%, transparent 55%),
+        radial-gradient(circle at 15% 85%, rgba(255, 107, 0, 0.16) 0%, transparent 55%),
+        radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.08) 0%, transparent 70%),
+        linear-gradient(rgba(168, 85, 247, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(168, 85, 247, 0.04) 1px, transparent 1px);
+      background-size: auto, auto, auto, 56px 56px, 56px 56px;
+    }
+
+    /* Contenedor principal de diapositivas */
+    .deck-container {
+      position: relative;
+      z-index: 10;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Diapositiva individual calculada para llenar el viewport 16:9 */
+    .slide-page {
+      display: none;
+      opacity: 0;
+      height: calc(100vh - 56px);
+      max-height: calc(100vh - 56px);
+      width: 100%;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0.85rem 2rem;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .slide-page.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    /* Tarjetas Glassmorphism modernas */
+    .glass-card {
+      background: rgba(20, 12, 45, 0.85);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(168, 85, 247, 0.22);
+      border-radius: 16px;
+      box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.7);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .glass-card:hover {
+      border-color: rgba(255, 153, 0, 0.5);
+      box-shadow: 0 20px 45px -10px rgba(168, 85, 247, 0.35);
+    }
+
+    .border-glow-purple {
+      border: 1px solid rgba(168, 85, 247, 0.5);
+      box-shadow: 0 0 30px -6px rgba(168, 85, 247, 0.3);
+    }
+
+    .border-glow-orange {
+      border: 1px solid rgba(255, 153, 0, 0.5);
+      box-shadow: 0 0 30px -6px rgba(255, 153, 0, 0.3);
+    }
+
+    .border-glow-cyan {
+      border: 1px solid rgba(0, 240, 255, 0.45);
+      box-shadow: 0 0 30px -6px rgba(0, 240, 255, 0.2);
+    }
+
+    .border-glow-red {
+      border: 1px solid rgba(255, 51, 102, 0.45);
+      box-shadow: 0 0 30px -6px rgba(255, 51, 102, 0.2);
+    }
+
+    .border-glow-emerald {
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      box-shadow: 0 0 30px -6px rgba(16, 185, 129, 0.2);
+    }
+
+    /* Terminal Hacker CLI */
+    .terminal-box {
+      background: #09051e;
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.65;
+      color: #93c5fd;
+      padding: 16px 20px;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.8), 0 8px 24px rgba(0,0,0,0.5);
+    }
+
+    /* Insignias de categoria */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .badge-cyan {
+      background: rgba(0, 240, 255, 0.12);
+      color: #00f0ff;
+      border: 1px solid rgba(0, 240, 255, 0.35);
+    }
+
+    .badge-orange {
+      background: rgba(255, 153, 0, 0.12);
+      color: #ff9900;
+      border: 1px solid rgba(255, 153, 0, 0.35);
+    }
+
+    .badge-emerald {
+      background: rgba(16, 185, 129, 0.12);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .badge-red {
+      background: rgba(255, 51, 102, 0.12);
+      color: #ff3366;
+      border: 1px solid rgba(255, 51, 102, 0.35);
+    }
+
+    .badge-purple {
+      background: rgba(139, 92, 246, 0.12);
+      color: #a78bfa;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+    }
+
+    /* Barra de progreso */
+    .progress-bar-fill {
+      height: 3px;
+      background: linear-gradient(90deg, #ff9900, #00f0ff, #10b981);
+      transition: width 0.3s ease;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
+    }
+
+    /* Impresion limpia a PDF */
+    @media print {
+      body {
+        overflow: visible !important;
+        background: #02050e !important;
+        color: #ffffff !important;
+      }
+      #cyber-canvas, .ambient-grid {
+        display: none !important;
+      }
+      .slide-header, .progress-bar-fill {
+        display: none !important;
+      }
+      .deck-container {
+        display: block !important;
+        height: auto !important;
+      }
+      .slide-page {
+        display: flex !important;
+        opacity: 1 !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        min-height: 100vh !important;
+        padding: 2cm !important;
+        justify-content: center !important;
+      }
+    }
+  
+    /* Mascota Costeña en Esquina / Badge flotante */
+    .mascot-sticker {
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)) drop-shadow(0 0 15px rgba(255,107,0,0.25));
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .mascot-sticker:hover {
+      transform: scale(1.08) rotate(-2deg);
+    }
+    
+  </style>
+</head>
+<body>
+
+  <!-- CANVAS DINAMICO INTERACTIVO -->
+  <canvas id="cyber-canvas"></canvas>
+
+  <!-- CUADRICULA AMBIENTAL -->
+  <div class="ambient-grid"></div>
+
+  <!-- CONTENEDOR MAESTRO DE LA PRESENTACION -->
+  <div class="deck-container">
+    
+    <!-- BARRA DE PROGRESO SUPERIOR -->
+    <div class="w-full bg-slate-900/80 h-[3px]">
+      <div id="progress-bar" class="progress-bar-fill w-[5%]"></div>
+    </div>
+
+    <!-- ENCABEZADO MINIMALISTA HUD CON LOGOS DE COMUNIDADES HERMANAS EN CADA SLIDE -->
+    <header class="slide-header px-6 lg:px-10 py-3 flex items-center justify-between border-b border-purple-900/40 bg-slate-950/85 backdrop-blur-md">
+      <div class="flex items-center gap-3">
+        <span id="slide-counter" class="text-xs font-mono text-amber-400 font-bold px-2.5 py-1 rounded-lg bg-purple-950/80 border border-purple-500/40 shadow-sm">
+          01 / 19
+        </span>
+        <span id="header-badge" class="badge badge-purple">HOST: AWS UG MINATITLAN</span>
+        <span class="text-purple-400 font-mono text-xs hidden sm:inline">/</span>
+        <span id="header-title" class="text-xs lg:text-sm font-bold tracking-wide text-slate-200 font-heading truncate max-w-[400px] lg:max-w-xl">
+          Tu Nube Expuesta: Malas Configuraciones en AWS
+        </span>
+      </div>
+
+      <!-- LOGOS HERMANADOS: PLAYA VICENTE X MINATITLAN (VISIBLE Y DESTACADO EN CADA SLIDE) -->
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 bg-purple-950/60 px-3.5 py-1.5 rounded-xl border border-purple-500/30 shadow-md">
+          <!-- Logo Playa Vicente -->
+          <div class="flex items-center gap-2" title="AWS User Group Playa Vicente (Comunidad del Speaker)">
+            <img src="imagenes/logo_aws_ug_playavicente.png" alt="AWS UG Playa Vicente" class="h-9 w-auto object-contain">
+            <span class="text-xs font-mono font-bold text-amber-400 hidden sm:inline">UG Playa Vicente</span>
+          </div>
+          <span class="text-slate-500 font-bold text-sm">×</span>
+          <!-- Logo Minatitlán: Medalla oficial con colores internos preservados y fondo exterior transparente -->
+          <div class="flex items-center gap-2" title="AWS User Group Minatitlán (Comunidad Anfitriona)">
+            <img src="imagenes/logo_aws_ug_minatitlan.png" alt="AWS UG Minatitlán" class="h-9 w-auto object-contain drop-shadow">
+            <span class="text-xs font-mono font-bold text-cyan-400 hidden sm:inline">UG Minatitlán</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- CUERPO CENTRAL DE DIAPOSITIVAS (CALCULADO PARA LLENAR EL VIEWPORT 16:9) -->
+    <main class="flex-1 w-full relative overflow-hidden flex items-center justify-center py-2">
+
+      <!-- SLIDE 01: PORTADA & TESIS CENTRAL -->
+      <section class="slide-page active" data-slide="1">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="badge badge-purple">AWS UG MINATITLÁN × PLAYA VICENTE</span>
+            <span class="badge badge-orange">LIVE DEMO LAB</span>
+            <span class="badge badge-emerald">SUR DE VERACRUZ</span>
+          </div>
+          <span class="text-xs font-mono text-purple-300 font-bold flex items-center gap-1.5">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> ENCUENTRO COMUNITARIO 2026
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto w-full">
+          <div class="lg:col-span-7 space-y-6">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-mono">
+              <span class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span>
+              Edición Oficial Minatitlán · 20 de Septiembre
+            </div>
+
+            <h1 class="text-4xl lg:text-5xl font-black font-heading tracking-tight leading-tight text-white">
+              ¿Tu Nube está <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-purple-300 to-emerald-400">Expuesta?</span>
+            </h1>
+            
+            <p class="text-xl lg:text-2xl font-bold text-slate-200 leading-snug">
+              De la Mala Configuración a la Explotación: Anatomía de los Descuidos Más Típicos en AWS
+            </p>
+
+            <!-- TARJETAS DE COMUNIDADES HERMANADAS CON LOGOS OFICIALES -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3">
+              <!-- Ponente & UG Playa Vicente -->
+              <div class="glass-card border border-amber-500/40 p-4 rounded-2xl bg-gradient-to-br from-amber-950/40 via-purple-950/40 to-slate-950/80 shadow-xl flex items-center gap-4">
+                <img src="imagenes/logo_aws_ug_playavicente.png" alt="AWS UG Playa Vicente" class="h-16 w-auto object-contain shrink-0 drop-shadow-md">
+                <div class="space-y-0.5">
+                  <span class="text-[11px] font-mono font-bold text-amber-400 uppercase tracking-wider block">SPEAKER & COMUNIDAD</span>
+                  <div class="text-base font-bold text-white font-heading leading-tight">Roberto Flores Segundo</div>
+                  <div class="text-xs text-purple-200 font-medium">Líder AWS UG Playa Vicente</div>
+                  <div class="text-[11px] text-slate-400 font-mono">Lead Auditor ISO 27001</div>
+                </div>
+              </div>
+
+              <!-- Anfitrión UG Minatitlán -->
+              <div class="glass-card border border-cyan-500/40 p-4 rounded-2xl bg-gradient-to-br from-purple-950/50 via-indigo-950/40 to-slate-950/80 shadow-xl flex items-center gap-4">
+                <img src="imagenes/logo_aws_ug_minatitlan.png" alt="AWS UG Minatitlán" class="h-16 w-auto object-contain shrink-0 drop-shadow-md">
+                <div class="space-y-0.5">
+                  <span class="text-[11px] font-mono font-bold text-cyan-400 uppercase tracking-wider block">COMUNIDAD ANFITRIONA</span>
+                  <div class="text-base font-bold text-white font-heading leading-tight">AWS UG Minatitlán</div>
+                  <div class="text-xs text-emerald-400 font-medium">Encuentro Tecnológico 2026</div>
+                  <div class="text-[11px] text-purple-300 font-mono">De la comunidad para la comunidad</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ILUSTRACION MASCOTAS OFICIALES DEL EVENTO (ARTE MINATITLÁN) -->
+          <div class="lg:col-span-5 space-y-3">
+            <div class="glass-card border-glow-purple p-4 space-y-3 relative overflow-hidden group shadow-2xl bg-[#0d0826]">
+              <div class="relative rounded-2xl overflow-hidden shadow-2xl border border-purple-500/40 bg-[#0d0826]">
+                <img src="imagenes/trio_mascotas_oficial.png" alt="Mascotas Oficiales AWS UG Minatitlán y Playa Vicente" class="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#0c0827]/90 via-transparent to-transparent pointer-events-none"></div>
+                <div class="absolute bottom-2 left-2 right-2 flex items-center justify-between text-xs font-mono">
+                  <span class="text-amber-300 font-bold bg-slate-950/90 px-2.5 py-1 rounded-lg border border-amber-500/50 shadow-md">🌴 Playa Vicente (Iguana Flow)</span>
+                  <span class="text-purple-300 font-bold bg-slate-950/90 px-2.5 py-1 rounded-lg border border-purple-500/50 shadow-md">☁️ Minatitlán (AWS Clouds)</span>
+                </div>
+              </div>
+              <div class="px-2 py-1 text-center space-y-1">
+                <span class="text-sm font-heading font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-purple-300 to-emerald-400 block">
+                  ¡De la Cuenca al Río Coatzacoalcos! 🇲🇽
+                </span>
+                <p class="text-sm lg:text-base font-mono text-purple-200/80">
+                  El diseño oficial conmemorativo de Minatitlán para una sesión 100% práctica y comunitaria.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-400 border-t border-purple-900/40 pt-3">
+          <span class="text-amber-400 flex items-center gap-1.5"><i data-lucide="palmtree" class="w-3.5 h-3.5"></i> Encuentro Tecnológico del Sur de Veracruz</span>
+          <span>AWS UG Minatitlán × AWS UG Playa Vicente</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 02: TRAYECTORIA Y COMUNIDAD: ROBERTO FLORES & AUDITFLOW -->
+      <section class="slide-page" data-slide="2">
+        <div class="flex items-center justify-between pb-1">
+          <div class="flex items-center gap-3">
+            <span class="badge badge-purple font-bold text-xs">🌴 TALENTO DE VERACRUZ</span>
+            <span class="badge badge-orange font-bold text-xs">AWS ALL BUILDERS GRANTEE</span>
+            <span class="badge badge-emerald font-bold text-xs">LEAD AUDITOR ISO 27001</span>
+          </div>
+          <span class="text-xs font-mono text-amber-400 font-bold flex items-center gap-2">
+            <span>☀️ Playa Vicente × Minatitlán</span>
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center my-auto w-full">
+          
+          <!-- COLUMNA IZQUIERDA: ROBERTO + MASCOTAS HERMANADAS -->
+          <div class="lg:col-span-5 space-y-3.5">
+            
+            <!-- TARJETA DEL SPEAKER CON FOTO -->
+            <div class="glass-card border-glow-orange p-5 space-y-3 shadow-xl">
+              <div class="flex items-center gap-4">
+                <div class="relative shrink-0">
+                  <img src="imagenes/roberto_flores_oficial.jpg" alt="Roberto Flores" class="w-24 h-28 rounded-2xl object-cover border-2 border-amber-400 shadow-2xl cursor-pointer hover:scale-105 transition" onclick="openImageModal('imagenes/roberto_flores_oficial.jpg', 'Roberto Flores Segundo - Founder AuditFlow & Community Leader')">
+                  <span class="absolute -bottom-1 -right-1 bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full text-[11px] font-bold shadow-md">
+                    🇲🇽
+                  </span>
+                </div>
+                <div class="space-y-1">
+                  <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-[11px] font-mono font-bold text-amber-300">
+                    🌴 Speaker Invitado
+                  </div>
+                  <h3 class="text-xl lg:text-2xl font-black text-white font-heading leading-tight">Roberto Flores Segundo</h3>
+                  <div class="text-xs font-mono font-bold text-amber-400">Siegfried · Playa Vicente, Ver.</div>
+                  <div class="text-xs text-purple-200 font-medium">Founder AuditFlow · Líder UG Playa Vicente</div>
+                  <div class="text-[11px] text-slate-400 font-mono">Lead Auditor ISO 27001 & SOC 1/2</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- MASCOTAS HERMANADAS: IGUANA (PLAYA VICENTE) & MONO SARAGUATO (MINATITLÁN) -->
+            <div class="glass-card border-glow-purple p-3 flex items-center justify-between gap-3 bg-gradient-to-r from-purple-950/70 to-slate-950/90 shadow-xl rounded-xl">
+              <!-- Iguana Playa Vicente -->
+              <div class="flex items-center gap-2.5">
+                <img src="imagenes/mascota_guayabera_veracruz.png" alt="Iguana Playa Vicente" class="w-14 h-14 rounded-xl object-cover mascot-sticker shrink-0 cursor-pointer hover:scale-110 transition shadow-md" onclick="openImageModal('imagenes/mascota_guayabera_veracruz.png', 'Playa Vicente: La Iguana con Guayabera')">
+                <div>
+                  <span class="text-[11px] font-mono font-bold text-amber-400 block">🌴 Playa Vicente</span>
+                  <span class="text-xs text-slate-300">La Iguana con Flow</span>
+                </div>
+              </div>
+              <span class="text-amber-400 font-bold text-sm">🤝</span>
+              <!-- Mono Saraguato Minatitlán -->
+              <div class="flex items-center gap-2.5">
+                <img src="imagenes/mascota_saraguato_minatitlan.png" alt="Mono Saraguato Minatitlán" class="w-14 h-14 rounded-xl object-cover mascot-sticker shrink-0 cursor-pointer hover:scale-110 transition shadow-md" onclick="openImageModal('imagenes/mascota_saraguato_minatitlan.png', 'Minatitlán: El Mono Saraguato con Guayabera y la Torre Petrolera')">
+                <div>
+                  <span class="text-[11px] font-mono font-bold text-purple-300 block">🐒 Minatitlán</span>
+                  <span class="text-xs text-slate-300">El Saraguato Jarocho</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- COLUMNA DERECHA: LOS 4 PILARES EN FORMATO CLARO Y COMPACTO -->
+          <div class="lg:col-span-7 space-y-3">
+            <div>
+              <h2 class="text-2xl lg:text-4xl font-black font-heading text-white tracking-tight leading-tight">
+                Aprender, Aplicar y Compartir: <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-emerald-400">Construir en Comunidad</span>
+              </h2>
+              <p class="text-xs lg:text-sm text-purple-200/90 mt-0.5 font-mono">
+                Aprender en el camino y compartir cada paso con la comunidad.
+              </p>
+            </div>
+
+            <!-- GRID 2x2 CON PADDING BALANCEADO -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              
+              <!-- PILAR 1: PLAYA VICENTE -->
+              <div class="glass-card p-3.5 border-l-4 border-amber-400 space-y-1 hover:border-amber-300 transition shadow-md">
+                <div class="flex items-center gap-2 text-white font-bold text-sm">
+                  <span class="text-base">🌴</span>
+                  <span class="text-amber-300 font-heading">Raíces en la Cuenca</span>
+                </div>
+                <div class="text-[11px] font-mono text-purple-200 font-bold">Líder AWS UG Playa Vicente</div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                  Impulsando la cultura cloud en la Cuenca del Papaloapan con talleres gratuitos y el programa <em>"De Cero a Cloud"</em> en estrecha hermandad con Minatitlán.
+                </p>
+              </div>
+
+              <!-- PILAR 2: LAS VEGAS ALUMNI -->
+              <div class="glass-card p-3.5 border-l-4 border-purple-400 space-y-1 hover:border-purple-300 transition shadow-md">
+                <div class="flex items-center gap-2 text-white font-bold text-sm">
+                  <span class="text-base">🤝</span>
+                  <span class="text-purple-300 font-heading">Aprender y Conectar</span>
+                </div>
+                <div class="text-[11px] font-mono text-purple-200 font-bold">AWS All Builders Grantee & re/Start</div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                  Seleccionado para asistir a re:Invent en Las Vegas y graduado de <strong>AWS re/Start</strong>. La oportunidad de conectar con otros builders y traer ese aprendizaje de vuelta a nuestra gente.
+                </p>
+              </div>
+
+              <!-- PILAR 3: AUDITORIA Y SOC -->
+              <div class="glass-card p-3.5 border-l-4 border-emerald-400 space-y-1 hover:border-emerald-300 transition shadow-md">
+                <div class="flex items-center gap-2 text-white font-bold text-sm">
+                  <span class="text-base">🛡️</span>
+                  <span class="text-emerald-300 font-heading">Seguridad y Cumplimiento</span>
+                </div>
+                <div class="text-[11px] font-mono text-purple-200 font-bold">Lead Auditor ISO 27001 & SOC 1/2</div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                  Experiencia en auditorías, políticas y control interno en la nube. Pasando de las matrices de riesgo en papel a ensuciarse las manos con código y laboratorios prácticos.
+                </p>
+              </div>
+
+              <!-- PILAR 4: AUDITFLOW STARTUP -->
+              <div class="glass-card p-3.5 border-l-4 border-orange-400 space-y-1 hover:border-orange-300 transition shadow-md">
+                <div class="flex items-center gap-2 text-white font-bold text-sm">
+                  <span class="text-base">🚀</span>
+                  <span class="text-orange-300 font-heading">AuditFlow (Beta)</span>
+                </div>
+                <div class="text-[11px] font-mono text-purple-200 font-bold">Cumplimiento ISO 27001 & SOC 1 en Español</div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                  Plataforma que automatiza la respuesta a cuestionarios de clientes B2B y centraliza evidencias de ISO 27001 y SOC 1 para startups de LATAM sin pagar fortunas.
+                </p>
+              </div>
+
+            </div>
+
+            <!-- FILOSOFÍA Y MENSAJE DE IMPACTO JAROCHO -->
+            <div class="p-2.5 rounded-xl bg-gradient-to-r from-orange-500/20 via-purple-500/20 to-emerald-500/20 border border-orange-500/30 text-xs font-mono text-slate-200 flex items-center gap-3 shadow-md">
+              <span class="text-xl shrink-0">🤝</span>
+              <p class="leading-relaxed">
+                <strong class="text-amber-300">El Mensaje Clave:</strong> "Nadie empieza sabiéndolo todo. <strong>El verdadero valor de la tecnología surge cuando compartimos lo que aprendemos y construimos juntos en comunidad.</strong>"
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-400 border-t border-purple-900/40 pt-2">
+          <span>De la Comunidad para la Comunidad · AWS User Group Playa Vicente & Minatitlán</span>
+          <span>Slide [ 02 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 03: HOJA DE RUTA DE LA SESION -->
+      <section class="slide-page" data-slide="3">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-cyan">ESTRUCTURA DEL TALLER</span>
+          <span class="text-xs font-mono text-slate-500">AGENDA // 4 FASES DE APRENDIZAJE</span>
+        </div>
+
+        <div class="my-auto space-y-6 w-full">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <h2 class="text-3xl lg:text-5xl font-black font-heading text-white">
+                Ruta de Navegación Técnica
+              </h2>
+              <p class="text-sm lg:text-base text-slate-300 mt-1">
+                Un recorrido integral desde el reconocimiento inicial hasta el blindaje defensivo en AWS.
+              </p>
+            </div>
+            <img src="imagenes/mascota_flechador_minatitlan.png" alt="Flechador de Minatitlán" class="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover mascot-sticker shrink-0 cursor-pointer hidden md:block" onclick="openImageModal('imagenes/mascota_flechador_minatitlan.png', 'El Flechador de Minatitlán: Apuntando el arco con precisión a la arquitectura cloud')" title="El Flechador del Emblema de Minatitlán">
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="glass-card p-6 space-y-3 border-t-4 border-cyan-400">
+              <span class="badge badge-cyan">FASE 01</span>
+              <h3 class="text-xl font-bold text-white font-heading">Reconocimiento & OSINT</h3>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                Superficie real de ataque en México y LATAM. Desmitificación de atacantes, bots 24/7 y por qué Google Dorking no indexa todo S3.
+              </p>
+            </div>
+
+            <div class="glass-card p-6 space-y-3 border-t-4 border-amber-400">
+              <span class="badge badge-orange">FASE 02</span>
+              <h3 class="text-xl font-bold text-white font-heading">Vectores de Ataque</h3>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                OWASP Top 10 en la nube: S3 Buckets públicos, SSRF en aplicaciones EC2 y extracción de credenciales IAM desde IMDSv1.
+              </p>
+            </div>
+
+            <div class="glass-card p-6 space-y-3 border-t-4 border-red-400">
+              <span class="badge badge-red">FASE 03</span>
+              <h3 class="text-xl font-bold text-white font-heading">Live Demo Lab</h3>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                Demostración práctica en terminal: Fuga de datos sensibles, robo de tokens de sesión y movimiento lateral a servicios restringidos.
+              </p>
+            </div>
+
+            <div class="glass-card p-6 space-y-3 border-t-4 border-emerald-400">
+              <span class="badge badge-emerald">FASE 04</span>
+              <h3 class="text-xl font-bold text-white font-heading">Blindaje Blue Team</h3>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                Remediación con IMDSv2, S3 Block Public Access a nivel de cuenta, SSM Session Manager y rutas oficiales con badges gratuitos.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-500 border-t border-slate-800/60 pt-3">
+          <span>Enfoque 100% práctico: Conceptos, terminal en vivo y remediación</span>
+          <span>Slide [ 03 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 04: CONTEXTO EN MEXICO Y LATAM (PUNCHY STATS) -->
+      <section class="slide-page" data-slide="4">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-red">AMENAZAS REALES EN LATAM</span>
+          <span class="text-xs font-mono text-slate-500">PANORAMA REGIONAL // IMPACTO FINANCIERO</span>
+        </div>
+
+        <div class="my-auto space-y-6 w-full">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <h2 class="text-3xl lg:text-5xl font-black font-heading text-white">
+                La Realidad de las Amenazas Cloud en México
+              </h2>
+              <p class="text-sm lg:text-base text-slate-400 mt-1">
+                Las malas configuraciones en la nube no son un riesgo teórico: son el vector #1 de monetización rápida.
+              </p>
+            </div>
+            <img src="imagenes/mascota_detective_s3.png" alt="Iguana Detective" class="w-16 h-16 md:w-18 md:h-18 rounded-2xl object-cover mascot-sticker shrink-0 cursor-pointer hidden md:block" onclick="openImageModal('imagenes/mascota_detective_s3.png', 'Iguana Detective de Playa Vicente: Auditando la postura de seguridad')" title="Auditoría y Detección">
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- STAT 1 -->
+            <div class="glass-card border-glow-cyan p-7 space-y-4">
+              <div class="text-4xl lg:text-6xl font-black font-mono text-cyan-400 tracking-tight">
+                #2 EN LATAM
+              </div>
+              <h3 class="text-xl font-bold text-white font-heading">México bajo Fuego Digital</h3>
+              <ul class="text-sm lg:text-base text-slate-200 space-y-2.5 font-mono leading-relaxed">
+                <li class="flex items-center gap-2">
+                  <i data-lucide="alert-triangle" class="w-4 h-4 text-cyan-400 shrink-0"></i>
+                  <span>Concentra el <strong>20% de todos los ciberataques</strong> de América Latina.</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <i data-lucide="alert-triangle" class="w-4 h-4 text-cyan-400 shrink-0"></i>
+                  <span>Únicamente superado por Brasil en volumen de incidentes.</span>
+                </li>
+              </ul>
+              <div class="pt-2 border-t border-purple-900/40">
+                <a href="https://www.fortinet.com/lat/demand/threat-report" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-mono text-cyan-300 hover:text-amber-400 transition">
+                  <i data-lucide="external-link" class="w-3 h-3"></i> Reporte Oficial: Fortinet / SCILabs
+                </a>
+              </div>
+            </div>
+
+            <!-- STAT 2 -->
+            <div class="glass-card border-glow-orange p-7 space-y-4">
+              <div class="text-4xl lg:text-6xl font-black font-mono text-amber-400 tracking-tight">
+                80%
+              </div>
+              <h3 class="text-xl font-bold text-white font-heading">Por Descuido Humano</h3>
+              <ul class="text-sm lg:text-base text-slate-200 space-y-2.5 font-mono leading-relaxed">
+                <li class="flex items-center gap-2">
+                  <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400 shrink-0"></i>
+                  <span>8 de cada 10 brechas cloud se originan por <strong>malas configuraciones</strong>.</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400 shrink-0"></i>
+                  <span>No requieren zero-days: basta una clave IAM en un repo o un S3 público.</span>
+                </li>
+              </ul>
+              <div class="pt-2 border-t border-purple-900/40">
+                <a href="https://www.datadoghq.com/state-of-cloud-security/" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-mono text-amber-300 hover:text-cyan-400 transition">
+                  <i data-lucide="external-link" class="w-3 h-3"></i> Reporte: Datadog & Gartner Cloud
+                </a>
+              </div>
+            </div>
+
+            <!-- STAT 3 -->
+            <div class="glass-card border-glow-red p-7 space-y-4">
+              <div class="text-4xl lg:text-6xl font-black font-mono text-red-400 tracking-tight">
+                $15,000+ USD
+              </div>
+              <h3 class="text-xl font-bold text-white font-heading">Factura Sorpresa y Multas</h3>
+              <ul class="text-sm lg:text-base text-slate-200 space-y-2.5 font-mono leading-relaxed">
+                <li class="flex items-center gap-2">
+                  <i data-lucide="alert-triangle" class="w-4 h-4 text-red-400 shrink-0"></i>
+                  <span>Clusters GPU levantados en minutos para minar criptomonedas.</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <i data-lucide="alert-triangle" class="w-4 h-4 text-red-400 shrink-0"></i>
+                  <span>Sanciones de <strong>LFPDPPP / INAI</strong> por filtración de CFDIs, INE o datos personales.</span>
+                </li>
+              </ul>
+              <div class="pt-2 border-t border-purple-900/40">
+                <a href="https://www.ibm.com/reports/data-breach" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-mono text-rose-300 hover:text-amber-400 transition">
+                  <i data-lucide="external-link" class="w-3 h-3"></i> Reporte: IBM Cost of a Data Breach
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-500 border-t border-slate-800/60 pt-3">
+          <span>Modelo de Responsabilidad Compartida: AWS protege la nube, tú proteges tus datos</span>
+          <span>Slide [ 04 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 05: QUIEN ATACA REALMENTE LA NUBE -->
+      <section class="slide-page" data-slide="5">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-purple">MENTALIDAD DEL ADVERSARIO</span>
+          <span class="text-xs font-mono text-slate-500">DESMITIFICACION // AUTOMATIZACION MASIVA // FUENTES VERIFICADAS</span>
+        </div>
+
+        <div class="my-auto space-y-4 w-full">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <h2 class="text-3xl lg:text-5xl font-black font-heading text-white">
+                Desmitificando al Atacante: ¿Quién Ataca Realmente la Nube?
+              </h2>
+              <p class="text-sm lg:text-base text-slate-300 mt-1">
+                Evidencia técnica verificada: bots 24/7 y descuidos cotidianos, no magia de Hollywood.
+              </p>
+            </div>
+            <img src="imagenes/mascota_saraguato_minatitlan.png" alt="Mono Saraguato Minatitlán" class="w-16 h-16 md:w-18 md:h-18 rounded-2xl object-cover mascot-sticker shrink-0 cursor-pointer hidden md:block" onclick="openImageModal('imagenes/mascota_saraguato_minatitlan.png', 'Mono Saraguato de Minatitlán: Desmitificando las amenazas cloud')" title="Saraguato de Minatitlán">
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- MITO -->
+            <div class="glass-card p-6 space-y-3.5 border-l-4 border-slate-600">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold text-slate-400 font-heading">El Mito de Película (Hollywood)</h3>
+                <span class="badge bg-slate-800 text-slate-300 text-xs">FANTASÍA</span>
+              </div>
+              <p class="text-sm lg:text-base lg:text-sm text-slate-400 leading-relaxed">
+                El hacker solitario con sudadera en una habitación oscura, que escribe frenéticamente en terminal verde y pasa 6 meses analizando a tu empresa para entrar por un zero-day militar.
+              </p>
+              <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs font-mono text-slate-400 space-y-1">
+                <div>[X] Ataques dirigidos exclusivamente a grandes corporativos.</div>
+                <div>[X] Meses de ingeniería inversa manual por objetivo.</div>
+                <div>[X] Dependencia exclusiva de vulnerabilidades 0-day no parchadas.</div>
+              </div>
+            </div>
+
+            <!-- REALIDAD -->
+            <div class="glass-card border-glow-cyan p-6 space-y-3.5 border-l-4 border-cyan-400">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold text-cyan-400 font-heading">La Realidad Operativa (La Calle Digital)</h3>
+                <span class="badge badge-cyan text-xs">HECHO REAL COMPROBADO</span>
+              </div>
+              <p class="text-sm lg:text-base lg:text-sm text-slate-200 leading-relaxed">
+                Bots y scanners automatizados en Go y Python ejecutándose 24/7. Escanean el espacio IPv4 de AWS y APIs públicas buscando descuidos cotidianos de 5 minutos mientras duermes.
+              </p>
+              <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-xs font-mono text-cyan-200 space-y-1">
+                <div>[+] Detección de llaves IAM en GitHub en &lt; 4 minutos (o 90 seg con honeypots).</div>
+                <div>[+] Scanners masivos de S3 buscando facturas y respaldos en México.</div>
+                <div>[+] Sondeos automatizados de SSRF contra metadatos en proxies y APIs.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FUENTES DE DATOS COMPROBADAS CON ENLACES CLICKEABLES -->
+          <div class="p-4 rounded-xl bg-slate-900/95 border border-cyan-500/30 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono text-cyan-400 font-bold flex items-center gap-1.5">
+                <i data-lucide="shield-check" class="w-4 h-4 text-cyan-400"></i>
+                FUENTES OFICIALES & EVIDENCIA CIENTÍFICA DE LA INDUSTRIA:
+              </span>
+              <span class="badge badge-cyan text-xs">DATOS VERIFICABLES</span>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+              <a href="https://unit42.paloaltonetworks.com/cloud-threat-report/" target="_blank" class="p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-xs space-y-1 transition group">
+                <div class="font-bold text-white flex items-center justify-between">
+                  <span>Palo Alto Unit 42</span>
+                  <i data-lucide="external-link" class="w-3 h-3 text-cyan-400 group-hover:translate-x-0.5 transition"></i>
+                </div>
+                <div class="text-sm text-slate-300">Cloud Threat Report: Detección y explotación de tokens en &lt; 4 min.</div>
+                <div class="text-xs font-mono text-cyan-400">unit42.paloaltonetworks.com</div>
+              </a>
+
+              <a href="https://docs.github.com/code-security/secret-scanning/about-secret-scanning" target="_blank" class="p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-xs space-y-1 transition group">
+                <div class="font-bold text-white flex items-center justify-between">
+                  <span>GitHub & AWS Partner</span>
+                  <i data-lucide="external-link" class="w-3 h-3 text-cyan-400 group-hover:translate-x-0.5 transition"></i>
+                </div>
+                <div class="text-sm text-slate-300">Secret Scanning: Monitoreo en tiempo real de commits públicos.</div>
+                <div class="text-xs font-mono text-cyan-400">docs.github.com/secret-scanning</div>
+              </a>
+
+              <a href="https://attack.mitre.org/matrices/enterprise/cloud/" target="_blank" class="p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-xs space-y-1 transition group">
+                <div class="font-bold text-white flex items-center justify-between">
+                  <span>MITRE ATT&CK Cloud</span>
+                  <i data-lucide="external-link" class="w-3 h-3 text-cyan-400 group-hover:translate-x-0.5 transition"></i>
+                </div>
+                <div class="text-sm text-slate-300">Técnicas T1552 (Credenciales) y T1526 (Cloud Discovery).</div>
+                <div class="text-xs font-mono text-cyan-400">attack.mitre.org/cloud</div>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-500 border-t border-slate-800/60 pt-3">
+          <span>Los atacantes no eligen objetivos por prestigio; eligen lo que es vulnerable por descuido</span>
+          <span>Slide [ 05 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 06: METRICAS DE ORO: VELOCIDAD DEL COMPROMISO -->
+      <section class="slide-page" data-slide="6">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-orange">METRICAS OFICIALES</span>
+          <span class="text-xs font-mono text-slate-500">MTTD & MTTR // VELOCIDAD ADVERSARIA</span>
+        </div>
+
+        <div class="my-auto space-y-6 w-full">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <h2 class="text-3xl lg:text-5xl font-black font-heading text-white">
+                Métricas de Oro: La Velocidad del Compromiso
+              </h2>
+              <p class="text-sm lg:text-base text-slate-300 mt-1">
+                En la nube, la ventana de oportunidad del defensor se mide en segundos, no en días.
+              </p>
+            </div>
+            <img src="imagenes/mascota_velocidad_reloj.png" alt="Mascota Velocidad 4 Min" class="w-20 h-20 rounded-2xl object-cover mascot-sticker shrink-0 cursor-pointer hidden md:block" onclick="openImageModal('imagenes/mascota_velocidad_reloj.png', 'Mascota a Toda Velocidad: Menos de 4 minutos para explotar una clave en AWS')" title="¡Menos de 4 minutos!">
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="glass-card border-glow-red p-7 space-y-4">
+              <div class="text-4xl lg:text-6xl font-black font-mono text-red-400">
+                &lt; 4 MIN
+              </div>
+              <h3 class="text-xl font-bold text-white font-heading">Tiempo de Explotación</h3>
+              <p class="text-sm lg:text-base lg:text-sm text-slate-300 leading-relaxed">
+                Tiempo récord documentado entre la subida accidental de un <strong>Access Key de AWS a GitHub</strong> y su uso por bots para desplegar clusters de criptominado.
+              </p>
+              <div class="text-xs font-mono pt-2 border-t border-slate-800 flex items-center justify-between">
+                <span class="text-slate-400">Palo Alto Unit 42 & Permiso</span>
+                <a href="https://unit42.paloaltonetworks.com/cloud-threat-report/" target="_blank" class="text-red-400 hover:underline inline-flex items-center gap-1">
+                  <i data-lucide="external-link" class="w-3 h-3"></i> unit42.paloaltonetworks.com
+                </a>
+              </div>
+            </div>
+
+            <div class="glass-card border-glow-orange p-7 space-y-4">
+              <div class="text-4xl lg:text-6xl font-black font-mono text-amber-400">
+                204 DÍAS
+              </div>
+              <h3 class="text-xl font-bold text-white font-heading">Tiempo Medio de Detección</h3>
+              <p class="text-sm lg:text-base lg:text-sm text-slate-300 leading-relaxed">
+                El <strong>Mean Time to Identify (MTTI)</strong> promedio de una brecha en infraestructuras sin monitoreo activo de eventos ni alarmas automatizadas.
+              </p>
+              <div class="text-xs font-mono pt-2 border-t border-slate-800 flex items-center justify-between">
+                <span class="text-slate-400">IBM Security Report</span>
+                <a href="https://www.ibm.com/reports/data-breach" target="_blank" class="text-amber-400 hover:underline inline-flex items-center gap-1">
+                  <i data-lucide="external-link" class="w-3 h-3"></i> ibm.com/reports/data-breach
+                </a>
+              </div>
+            </div>
+
+            <div class="glass-card border-glow-cyan p-7 space-y-4">
+              <div class="text-4xl lg:text-6xl font-black font-mono text-cyan-400">
+                59%
+              </div>
+              <h3 class="text-xl font-bold text-white font-heading">Exposición Pública Accidental</h3>
+              <p class="text-sm lg:text-base lg:text-sm text-slate-300 leading-relaxed">
+                Porcentaje de organizaciones que admitieron haber expuesto involuntariamente al menos un recurso de almacenamiento en la nube en el último año.
+              </p>
+              <div class="text-xs font-mono pt-2 border-t border-slate-800 flex items-center justify-between">
+                <span class="text-slate-400">Cloud Security Alliance</span>
+                <a href="https://cloudsecurityalliance.org/research/surveys-and-reports/" target="_blank" class="text-cyan-400 hover:underline inline-flex items-center gap-1">
+                  <i data-lucide="external-link" class="w-3 h-3"></i> cloudsecurityalliance.org
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-500 border-t border-slate-800/60 pt-3">
+          <span>La automatización del atacante solo puede neutralizarse con automatización defensiva</span>
+          <span>Slide [ 06 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 07: OSINT: GOOGLE DORKING VS API BRUTE FORCE -->
+      <section class="slide-page" data-slide="7">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-cyan">OSINT & RECONOCIMIENTO</span>
+          <span class="text-xs font-mono text-slate-500">GOOGLE DORKING VERIFICADO VS ENUMERACION DE APIS</span>
+        </div>
+
+        <div class="my-auto space-y-5 w-full">
+          <div>
+            <h2 class="text-3xl lg:text-5xl font-black font-heading text-white">
+              OSINT: ¿Por Qué Google Dorking No Indexa Todo S3?
+            </h2>
+            <p class="text-sm lg:text-base text-slate-400 mt-1">
+              Diferencia fundamental entre rastreo pasivo de buscadores y el descubrimiento activo mediante fuerza bruta de APIs.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- TARJETA IZQUIERDA: DORKING VERIFICADO CON MASCOTA DETECTIVE -->
+            <div class="glass-card p-5 space-y-3 relative overflow-hidden">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <img src="imagenes/mascota_detective_s3.png" alt="Detective S3" class="w-12 h-12 rounded-xl object-contain bg-purple-950/60 p-0.5 border border-purple-500/40 shadow cursor-pointer hover:scale-105 transition" onclick="openImageModal('imagenes/mascota_detective_s3.png', 'Mascota Detective en AWS S3: Rastreando llaves y buckets expuestos')">
+                  <div>
+                    <h3 class="text-xl font-bold text-slate-200 font-heading leading-tight">Google Dorking en S3</h3>
+                    <span class="text-xs font-mono text-purple-300">Reconocimiento pasivo en fuentes públicas</span>
+                  </div>
+                </div>
+                <span class="badge badge-emerald text-xs">PROBADO EN VIVO</span>
+              </div>
+              <div class="terminal-box text-xs text-amber-300 font-mono">
+                site:s3.amazonaws.com "cfdi" ext:xml
+              </div>
+              <p class="text-sm lg:text-base lg:text-sm text-slate-300 leading-relaxed">
+                <strong>La lección de indexación:</strong> Dorks arbitrarios como <code class="text-red-400">"facturacion" filetype:xml</code> devuelven 0 resultados porque Google no adivina nombres. Pero al usar la estructura oficial del SAT (<code class="text-amber-300">"cfdi" ext:xml</code>), Google despliega de inmediato decenas de facturas reales indexadas de dependencias gubernamentales y empresas mexicanas en AWS S3.
+              </p>
+              
+              <!-- BOTONES DIRECTOS A GOOGLE (SIN BOTON DE COPIAR) -->
+              <div class="space-y-2 pt-2 border-t border-slate-800">
+                <div class="text-xs font-mono text-slate-400">Lanza la búsqueda directa en una pestaña nueva:</div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <a href="https://www.google.com/search?q=site%3As3.amazonaws.com+%22cfdi%22+ext%3Axml" target="_blank" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-mono text-xs border border-emerald-500/40 transition shadow-sm font-bold">
+                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Abrir Dork CFDI México (Probado)
+                  </a>
+                  <a href="https://www.google.com/search?q=site%3As3.amazonaws.com+%22cfdi:Comprobante%22" target="_blank" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-mono text-xs border border-cyan-500/40 transition shadow-sm">
+                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Abrir Dork Comprobante SAT
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- TARJETA DERECHA: ENUMERACION DE APIS Y BUCKET DEL LAB -->
+            <div class="glass-card border-glow-cyan p-6 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold text-cyan-400 font-heading">Enumeración de la API: El Bucket del Lab</h3>
+                <span class="badge badge-cyan text-xs">DESCUBRIMIENTO ACTIVO</span>
+              </div>
+              <div class="terminal-box text-xs text-slate-300 space-y-1">
+                <div class="text-slate-400"># CloudFormation crea en tu cuenta el bucket público:</div>
+                <div class="text-amber-400">lab-red-team-public-data-&lt;TU_ACCOUNT_ID&gt;</div>
+                <div class="text-slate-400 mt-1"># El adversario descubre y audita el bucket con s3scanner:</div>
+                <div class="text-cyan-300">$ s3scanner scan --buckets-file scripts/wordlist_s3_mexico.txt</div>
+              </div>
+              <p class="text-sm lg:text-base lg:text-sm text-slate-300 leading-relaxed">
+                <strong>¿Se crea o ya está puesto?</strong> En este laboratorio, al ejecutar <code class="text-cyan-400">./redteam</code> (o <code class="text-cyan-400">deploy.sh</code>), CloudFormation <strong>crea automáticamente en tu cuenta de AWS</strong> el bucket vulnerable con políticas públicas y sube los archivos de muestra (factura SAT y base de datos).
+              </p>
+              <div class="flex items-center gap-2 pt-2 border-t border-slate-800">
+                <button onclick="copyToClipboard('s3scanner scan --buckets-file scripts/wordlist_s3_mexico.txt', this)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-mono text-xs border border-slate-700 transition shadow-sm">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar Comando s3scanner
+                </button>
+                <span class="text-xs font-mono text-slate-400">Auditoría real contra Amazon S3 REST API</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CATÁLOGO INTERACTIVO DE DORKS EN SERVICIOS DE AWS (MÁS ALLÁ DE S3) -->
+          <div class="glass-card p-4 border-l-4 border-amber-400 space-y-2.5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <i data-lucide="cloud" class="w-4 h-4 text-amber-400"></i>
+                <span class="text-xs font-mono text-amber-400 font-bold uppercase tracking-wider">Dorks en AWS: Más Allá de Amazon S3</span>
+                <span class="badge badge-orange text-xs">RECONOCIMIENTO PASIVO</span>
+              </div>
+              <span class="text-xs font-mono text-slate-400">Los buscadores indexan subdominios públicos de AWS dejados sin autenticación</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+              <!-- Selector de Servicio de AWS -->
+              <div class="md:col-span-4">
+                <select id="aws-dork-select" onchange="updateAwsDorkPreview()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-amber-400 cursor-pointer">
+                  <option value="s3">1. Amazon S3 (Facturas CFDI SAT en XML)</option>
+                  <option value="amplify">2. AWS Amplify (Ramas de Staging / Dev)</option>
+                  <option value="beanstalk">3. Elastic Beanstalk (APIs & Swagger)</option>
+                  <option value="cloudfront">4. CloudFront (Fuga de Claves en JS)</option>
+                </select>
+              </div>
+
+              <!-- Vista previa del Dork de AWS -->
+              <div class="md:col-span-6">
+                <div id="aws-dork-preview" class="w-full bg-slate-950/90 border border-slate-800 rounded-lg px-3 py-1.5 text-xs font-mono text-amber-300 truncate" title="Dork de AWS">
+                  site:s3.amazonaws.com "cfdi" ext:xml
+                </div>
+              </div>
+
+              <!-- Botón de Ejecución -->
+              <div class="md:col-span-2 flex justify-end">
+                <button onclick="launchAwsDorkSearch()" class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-mono text-xs font-bold transition shadow cursor-pointer">
+                  <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Ver en Google
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-500 border-t border-slate-800/60 pt-3">
+          <span>Google sólo indexa enlaces existentes; la API REST de S3 responde directamente a consultas directas</span>
+          <span>Slide [ 07 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 08: OWASP TOP 10 EN LA NUBE -->
+      <section class="slide-page" data-slide="8">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-red">VECTORES DE VULNERABILIDAD</span>
+          <span class="text-xs font-mono text-slate-500">OWASP TOP 10 // MAPEADO A SERVICIOS AWS</span>
+        </div>
+
+        <div class="my-auto space-y-6 w-full">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <h2 class="text-3xl lg:text-5xl font-black font-heading text-white">
+                OWASP Top 10 Reflejado en Arquitecturas Cloud
+              </h2>
+              <p class="text-sm lg:text-base text-slate-400 mt-1">
+                Las vulnerabilidades clásicas de aplicaciones web adoptan formas críticas cuando interactúan con servicios cloud.
+              </p>
+            </div>
+            <img src="imagenes/mascota_flechador_minatitlan.png" alt="El Flechador de Minatitlán" class="w-16 h-16 md:w-18 md:h-18 rounded-2xl object-cover mascot-sticker shrink-0 cursor-pointer hidden md:block" onclick="openImageModal('imagenes/mascota_flechador_minatitlan.png', 'El Flechador de Minatitlán: Apuntando certeramente a los vectores de ataque en AWS')" title="El Flechador de Minatitlán">
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glass-card border-glow-red p-6 space-y-3">
+              <span class="badge badge-red">A01:2021</span>
+              <h3 class="text-xl font-bold text-white font-heading">Broken Access Control</h3>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                Políticas de S3 con <code class="text-red-400">Principal: "*"</code> y roles con <code class="text-red-400">AdministratorAccess</code> sin restricción de recursos.
+              </p>
+              <div class="p-2.5 rounded bg-slate-900 border border-slate-800 text-xs text-amber-300 italic">
+                <strong>En lenguaje cotidiano:</strong> Es como dejar la bodega de la empresa abierta de par en par y sin candado "para que nadie tenga problemas para entrar".
+              </div>
+              <div class="text-xs font-mono text-red-400 border-t border-slate-800 pt-2 flex items-center justify-between">
+                <span>Impacto: Acceso total sin auth.</span>
+                <a href="https://owasp.org/Top10/A01_2021-Broken_Access_Control/" target="_blank" class="text-purple-300 hover:text-amber-400 inline-flex items-center gap-1">
+                  <i data-lucide="external-link" class="w-3 h-3"></i> owasp.org
+                </a>
+              </div>
+            </div>
+
+            <div class="glass-card border-glow-orange p-6 space-y-3">
+              <span class="badge badge-orange">A05:2021</span>
+              <h3 class="text-xl font-bold text-white font-heading">Security Misconfiguration</h3>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                Mantener activo <strong>IMDSv1</strong> en EC2, Security Groups con SSH al mundo (<code class="text-amber-400">0.0.0.0/0</code>) o sitios sin cabeceras HTTP.
+              </p>
+              <div class="p-2.5 rounded bg-slate-900 border border-slate-800 text-xs text-amber-300 italic">
+                <strong>En lenguaje cotidiano:</strong> Es como irte a dormir dejando la ventana de la casa abierta hacia la banqueta y el contestador automático sin clave.
+              </div>
+              <div class="text-xs font-mono text-amber-400 border-t border-slate-800 pt-2 flex items-center justify-between">
+                <span>Impacto: Superficie amplificada.</span>
+                <a href="https://owasp.org/Top10/A05_2021-Security_Misconfiguration/" target="_blank" class="text-amber-300 hover:text-cyan-400 inline-flex items-center gap-1">
+                  <i data-lucide="external-link" class="w-3 h-3"></i> owasp.org
+                </a>
+              </div>
+            </div>
+
+            <div class="glass-card border-glow-cyan p-6 space-y-3">
+              <span class="badge badge-cyan">A10:2021</span>
+              <h3 class="text-xl font-bold text-white font-heading">SSRF en la Nube</h3>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                Endpoints web que reciben URLs externas sin validar y hacen peticiones hacia la IP privada <code class="text-cyan-400">169.254.169.254</code> (metadatos).
+              </p>
+              <div class="p-2.5 rounded bg-slate-900 border border-slate-800 text-xs text-cyan-300 italic">
+                <strong>En lenguaje cotidiano:</strong> Es engañar al mesero del restaurante para que entre a la oficina privada del gerente y te saque la libreta de claves maestras.
+              </div>
+              <div class="text-xs font-mono text-cyan-400 border-t border-slate-800 pt-2 flex items-center justify-between">
+                <span>Impacto: Robo IAM & Pivoting.</span>
+                <a href="https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_%28SSRF%29/" target="_blank" class="text-cyan-300 hover:text-purple-400 inline-flex items-center gap-1">
+                  <i data-lucide="external-link" class="w-3 h-3"></i> owasp.org
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-500 border-t border-slate-800/60 pt-3">
+          <span>En la nube, un error en la capa de aplicación salta inmediatamente a la capa de infraestructura</span>
+          <span>Slide [ 08 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 09: CABECERAS DE SEGURIDAD HTTP -->
+      <section class="slide-page" data-slide="9">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-emerald">DEFENSA EN CAPA DE APLICACION</span>
+          <span class="text-xs font-mono text-slate-500">SECURITY HEADERS // PROTECCION DEL NAVEGADOR</span>
+        </div>
+
+        <div class="my-auto space-y-6 w-full">
+          <div>
+            <h2 class="text-3xl lg:text-5xl font-black font-heading text-white">
+              Anatomía de las Cabeceras de Seguridad HTTP
+            </h2>
+            <p class="text-sm lg:text-base text-slate-400 mt-1">
+              Las 5 directivas esenciales que cualquier desarrollador o builder debe configurar en su capa de entrega web.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div class="glass-card p-5 space-y-2">
+              <span class="badge badge-cyan text-xs">HSTS</span>
+              <h4 class="text-sm font-bold text-white font-heading">Strict-Transport</h4>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                Fuerza conexiones HTTPS exclusivas e impide ataques Man-in-the-Middle por degradación a HTTP simple.
+              </p>
+              <div class="text-xs font-mono text-cyan-400">max-age=31536000</div>
+            </div>
+
+            <div class="glass-card p-5 space-y-2">
+              <span class="badge badge-orange text-xs">CSP</span>
+              <h4 class="text-sm font-bold text-white font-heading">Content-Security</h4>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                Restringe de qué orígenes el navegador puede cargar scripts, estilos e imágenes, mitigando ataques XSS.
+              </p>
+              <div class="text-xs font-mono text-amber-400">default-src 'self'</div>
+            </div>
+
+            <div class="glass-card p-5 space-y-2">
+              <span class="badge badge-emerald text-xs">MIME</span>
+              <h4 class="text-sm font-bold text-white font-heading">X-Content-Type</h4>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                Impide que el navegador intente adivinar (sniff) el tipo de archivo, bloqueando ataques de tipo ejecutable.
+              </p>
+              <div class="text-xs font-mono text-emerald-400">nosniff</div>
+            </div>
+
+            <div class="glass-card p-5 space-y-2">
+              <span class="badge badge-red text-xs">FRAMES</span>
+              <h4 class="text-sm font-bold text-white font-heading">X-Frame-Options</h4>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                Evita que el sitio web sea incrustado dentro de un <code class="text-red-400">&lt;iframe&gt;</code> en sitios maliciosos, neutralizando Clickjacking.
+              </p>
+              <div class="text-xs font-mono text-red-400">DENY</div>
+            </div>
+
+            <div class="glass-card p-5 space-y-2">
+              <span class="badge badge-purple text-xs">PRIVACY</span>
+              <h4 class="text-sm font-bold text-white font-heading">Referrer-Policy</h4>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                Controla cuánta información de la URL de origen se envía cuando el usuario hace clic en un enlace externo.
+              </p>
+              <div class="text-xs font-mono text-purple-400">strict-origin...</div>
+            </div>
+          </div>
+
+          <!-- EVIDENCIA REAL SECURITYHEADERS.COM (SNYK API & WEB) -->
+          <div class="p-3.5 rounded-xl bg-slate-900/95 border border-red-500/30 text-xs flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <span class="badge badge-red font-bold text-sm px-2.5 py-0.5">GRADE: F</span>
+              <div class="text-slate-300">
+                <strong>Telemetría Global (SecurityHeaders.com / Snyk):</strong> Más de <strong class="text-red-400 font-bold">176 Millones de sitios</strong> analizados en todo el mundo tienen calificación <strong class="text-red-400">F</strong> (el 45% de la web mundial está en el <em>Hall of Shame</em> por omitir estas cabeceras).
+              </div>
+            </div>
+            <a href="https://securityheaders.com/" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-300 font-mono text-xs border border-red-500/30 transition">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Probar en securityheaders.com
+            </a>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-500 border-t border-slate-800/60 pt-3">
+          <span>Verificación oficial en vivo: securityheaders.com (Powered by Snyk)</span>
+          <span>Slide [ 09 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 10: LA TRAMPA DE LA IA Y LA CAMISA -->
+      <section class="slide-page" data-slide="10">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-orange">ARQUITECTURA DE ENTREGA</span>
+          <span class="text-xs font-mono text-slate-500">META TAGS VS CABECERAS REALES EN AWS</span>
+        </div>
+
+        <div class="my-auto space-y-5 w-full">
+          <div>
+            <h2 class="text-3xl lg:text-5xl font-black font-heading text-white">
+              Security Headers: La Trampa de la IA y la Camisa
+            </h2>
+            <p class="text-sm lg:text-base text-slate-400 mt-1">
+              Subes tu web, vas a <code class="text-cyan-400">securityheaders.com</code> y tienes una <strong>F</strong>. Le pides a una IA que lo arregle y te dice: <em>"Pon etiquetas &lt;meta&gt; en tu HTML"</em>.
+            </p>
+          </div>
+
+          <!-- ANALOGIA DE LA CAMISA LAVADA CON CLORO CON MASCOTA GUAYABERA -->
+          <div class="glass-card border-glow-orange p-5 border-l-4 border-amber-500 flex flex-col md:flex-row items-center gap-5 shadow-xl">
+            <img src="imagenes/mascota_guayabera_veracruz.png" alt="Iguana con Guayabera" class="w-24 h-24 rounded-2xl object-cover mascot-sticker shrink-0 cursor-pointer hover:scale-105 transition hidden sm:block" onclick="openImageModal('imagenes/mascota_guayabera_veracruz.png', 'La Analogía de la Guayabera: ¡No laves tu guayabera blanca con cloro!')">
+            <div class="space-y-2">
+              <div class="flex items-center gap-2 text-amber-400 font-bold font-mono text-sm uppercase tracking-wider">
+                <span>🌴 [ANALOGÍA COSTEÑA] La Guayabera Lavada con Cloro</span>
+              </div>
+            <p class="text-sm lg:text-base lg:text-sm text-slate-200 leading-relaxed italic">
+              "Poner encabezados de seguridad en etiquetas <code class="text-amber-300 font-mono">&lt;meta&gt;</code> en el HTML es exactamente como coser la etiqueta de <em>'No lavar con cloro ni agua caliente'</em> en el forro interior de la camisa... ¡pero leerla después de que ya la sacaste destrozada de la lavadora!"
+            </p>
+            <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+              El navegador negocia la seguridad en el protocolo HTTP <strong>antes</strong> de interpretar el cuerpo HTML. Cabeceras críticas como <strong>Strict-Transport-Security (HSTS)</strong> o <strong>X-Frame-Options</strong> son <strong>completamente ignoradas por los navegadores</strong> si vienen en etiquetas <code class="text-red-400">&lt;meta&gt;</code>. Deben viajar obligatoriamente en las cabeceras HTTP de respuesta del servidor o CDN.
+            </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="glass-card border-glow-red p-5 space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="text-base lg:text-lg font-bold text-red-400 font-heading">El Error Frecuente (La Trampa de la IA)</h3>
+                <span class="badge badge-red text-xs">INEFECTIVO</span>
+              </div>
+              <div class="terminal-box text-xs text-red-300">
+                &lt;meta http-equiv="X-Frame-Options" content="DENY"&gt;<br>
+                &lt;meta http-equiv="Strict-Transport-Security" content="..."&gt;
+              </div>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                <strong>Por qué falla:</strong> El estándar W3C define que la protección contra ataques de red debe establecerse a nivel de transporte. Al estar en el HTML, la conexión ya se negoció sin cifrado forzado ni protección contra framing.
+              </p>
+            </div>
+
+            <div class="glass-card border-glow-emerald p-5 space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="text-base lg:text-lg font-bold text-emerald-400 font-heading">La Solución Nativa en AWS (Amplify / CloudFront)</h3>
+                <span class="badge badge-emerald text-xs">CORRECTO</span>
+              </div>
+              <div class="terminal-box text-xs text-emerald-300">
+                # En amplify.yml (Hosting) o CloudFront Headers Policy<br>
+                customHeaders:<br>
+                &nbsp;&nbsp;- pattern: '**/*'<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;headers:<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- key: 'Strict-Transport-Security'<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value: 'max-age=31536000; includeSubDomains'
+              </div>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                <strong>Cómo se implementa:</strong> Agrega la sección <code class="text-emerald-400 font-mono">customHeaders</code> en tu <code class="text-emerald-400 font-mono">amplify.yml</code> o configura un <strong>Response Headers Policy</strong> en CloudFront para inyectar cabeceras reales de borde.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-500 border-t border-slate-800/60 pt-3">
+          <span>La seguridad del navegador se negocia a nivel de protocolo HTTP, no en el documento HTML</span>
+          <span>Slide [ 10 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 11: TOPOLOGIA DEL LABORATORIO DE EXPLOTACION -->
+      <section class="slide-page" data-slide="11">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-cyan">ARQUITECTURA DE LA DEMO</span>
+          <span class="text-xs font-mono text-slate-500">CADENA DE ATAQUE // FLUJO COMPLETO</span>
+        </div>
+
+        <div class="my-auto space-y-6 w-full">
+          <div>
+            <h2 class="text-3xl lg:text-5xl font-black font-heading text-white">
+              Topología del Laboratorio de Explotación
+            </h2>
+            <p class="text-sm lg:text-base text-slate-400 mt-1">
+              Cadena de ataque completa: cómo un pequeño descuido en una aplicación web permite comprometer recursos internos restringidos.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <!-- DIAGRAMA DE FLUJO -->
+            <div class="lg:col-span-7 space-y-4">
+              <div class="glass-card border-glow-cyan p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-center text-center">
+                  
+                  <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5 shadow-md">
+                    <i data-lucide="bot" class="w-7 h-7 text-red-400 mx-auto"></i>
+                    <div class="text-xs font-mono font-bold text-red-400">01. ATACANTE</div>
+                    <div class="text-sm text-slate-300">Scanner OSINT y SSRF</div>
+                  </div>
+
+                  <div class="text-amber-400 font-mono text-xl font-bold">→</div>
+
+                  <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5 shadow-md">
+                    <i data-lucide="server" class="w-7 h-7 text-amber-400 mx-auto"></i>
+                    <div class="text-xs font-mono font-bold text-amber-400">02. EC2 PROXY</div>
+                    <div class="text-sm text-slate-300">Petición interna ciega</div>
+                  </div>
+
+                  <div class="text-cyan-400 font-mono text-xl font-bold">→</div>
+
+                  <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5 shadow-md">
+                    <i data-lucide="database" class="w-7 h-7 text-cyan-400 mx-auto"></i>
+                    <div class="text-xs font-mono font-bold text-cyan-400">03. IMDSv1 + S3</div>
+                    <div class="text-sm text-slate-300">Tokens STS expuestos</div>
+                  </div>
+
+                </div>
+
+                <div class="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 text-xs font-mono text-slate-300 leading-relaxed">
+                  <span class="text-amber-400 font-bold">Arquitectura del Lab:</span> 1 VPC (10.0.0.0/16) · 1 EC2 vulnerable (100% Free Tier) · 1 Rol IAM con permisos excesivos · 1 Bucket S3 público.
+                </div>
+              </div>
+            </div>
+
+            <!-- ILUSTRACION MASCOTAS DETECTIVES -->
+            <div class="lg:col-span-5">
+              <div class="glass-card border-glow-amber p-3.5 space-y-2 relative overflow-hidden group shadow-2xl">
+                <div class="relative rounded-xl overflow-hidden border border-amber-500/40">
+                  <img src="imagenes/mascota_cloud_builder.png" alt="Mascotas Detectives de la Nube" class="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-500">
+                  <div class="absolute bottom-2 left-2 right-2 flex items-center justify-between text-xs font-mono bg-slate-950/85 px-2.5 py-1 rounded border border-amber-500/40">
+                    <span class="text-amber-300 font-bold">🕵️‍♂️ Rastreando la Falla</span>
+                    <span class="text-emerald-300 font-bold">🛡️ Levantando el Escudo</span>
+                  </div>
+                </div>
+                <div class="text-center text-xs font-mono text-slate-300">
+                  <span class="text-amber-400 font-bold">El Red Team</span> descubre las huellas y el <span class="text-emerald-400 font-bold">Blue Team</span> sella la bóveda.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-500 border-t border-slate-800/60 pt-3">
+          <span>Infraestructura desplegada con CloudFormation: 1 VPC, 1 EC2 vulnerable, 2 S3 Buckets, 1 Rol IAM</span>
+          <span>Slide [ 11 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 12: DEMO 01: FUGA DE DATOS EN S3 -->
+      <section class="slide-page" data-slide="12">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-red">LIVE DEMO · FASE 01</span>
+          <span class="text-xs font-mono text-slate-500">EXPOSICION PUBLICA // S3 BUCKETS</span>
+        </div>
+
+        <div class="my-auto space-y-6 w-full">
+          <div>
+            <h2 class="text-3xl lg:text-5xl font-black font-heading text-white">
+              Demo 01: Fuga de Datos Sensibles en Amazon S3
+            </h2>
+            <p class="text-sm lg:text-base text-slate-400 mt-1">
+              Acceso a almacenamiento sin autenticación mediante una simple petición anónima de AWS CLI.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="glass-card p-7 space-y-4">
+              <span class="badge badge-red">EL DESCUIDO EN EL LAB</span>
+              <h3 class="text-xl font-bold text-white font-heading">¿Qué Sucedió en la Configuración?</h3>
+              <p class="text-sm lg:text-base lg:text-sm text-slate-300 leading-relaxed">
+                CloudFormation creó en tu cuenta el bucket vulnerable <code class="text-amber-300 font-mono">lab-red-team-public-data-&lt;ACCOUNT_ID&gt;</code> sin activar <strong>S3 Block Public Access</strong> y con política <code class="text-red-400 font-mono">"Principal": "*"</code> para simular una integración descuidada.
+              </p>
+              <div class="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs font-mono text-red-200">
+                [ALERTA] La bandera --no-sign-request omite la firma SigV4: cualquier persona en internet puede listar y descargar el contenido sin tener cuenta de AWS ni credenciales.
+              </div>
+              <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs font-mono text-slate-300 leading-relaxed">
+                <span class="text-amber-400 font-bold">[DATOS SINTÉTICOS Y ÉTICA]:</span> Todo el contenido del lab es simulado (CFDI con RFC genérico del SAT <code class="text-slate-200 font-bold">XAXX010101000</code>). En el mundo real, los buckets expuestos albergan desde listas de compras personales, fotos de vacaciones y assets comunitarios, hasta nóminas y bases de datos completas.
+              </div>
+              <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800">
+                <button onclick="copyToClipboard('s3scanner scan --buckets-file scripts/wordlist_s3_mexico.txt', this)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-mono text-xs border border-amber-500/40 transition shadow-sm">
+                  <i data-lucide="crosshair" class="w-3.5 h-3.5"></i> Copiar s3scanner Scan
+                </button>
+                <button onclick="copyToClipboard('aws s3 ls s3://lab-red-team-public-data-TU_ACCOUNT_ID/ --no-sign-request', this)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 font-mono text-xs border border-red-500/40 transition shadow-sm">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar Comando Listar
+                </button>
+                <button onclick="copyToClipboard('python3 scripts/01_explotar_s3.py', this)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-mono text-xs border border-slate-700 transition shadow-sm">
+                  <i data-lucide="terminal" class="w-3.5 h-3.5"></i> Copiar Auto: 01_explotar_s3.py
+                </button>
+              </div>
+            </div>
+
+            <div class="glass-card border-glow-red p-7 space-y-4">
+              <span class="badge badge-cyan">COMANDO DEL ATACANTE</span>
+              <div class="terminal-box text-xs space-y-2">
+                <div class="text-slate-400">$ aws s3 ls s3://lab-red-team-public-data-&lt;ACCOUNT_ID&gt;/ --no-sign-request</div>
+                <div class="text-amber-400">2026-03-15 10:20:14 &nbsp; 45201 &nbsp; facturas/factura_sat_ejemplo.xml</div>
+                <div class="text-amber-400">2026-03-15 10:20:14 &nbsp; 12890 &nbsp; backups/backup_db_clientes.sql</div>
+                <div class="text-emerald-400 font-bold">2026-03-15 10:20:14 &nbsp; 252110 &nbsp; premios/Guia_Oportunidades_Becas_AWS_2026.pdf</div>
+                <div class="text-cyan-400 font-bold">[+] 3 objetos extraidos sin credenciales // ¡Premio de la comunidad descargado!</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-500 border-t border-slate-800/60 pt-3">
+          <span>La bandera --no-sign-request permite consultar cualquier bucket público sin tener cuenta de AWS</span>
+          <span>Slide [ 12 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 13: DEMO 02: SSRF EN EC2 Y ROBO DE TOKENS IMDSv1 -->
+      <section class="slide-page" data-slide="13">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-red">LIVE DEMO · FASE 02</span>
+          <span class="text-xs font-mono text-slate-500">SSRF & ROBO DE IDENTIDAD // IMDSv1</span>
+        </div>
+
+        <div class="my-auto space-y-6 w-full">
+          <div>
+            <h2 class="text-3xl lg:text-5xl font-black font-heading text-white">
+              Demo 02: SSRF en EC2 y Robo de Tokens desde IMDSv1
+            </h2>
+            <p class="text-sm lg:text-base text-slate-400 mt-1">
+              Cómo una vulnerabilidad web permite consultar el servicio de metadatos de la instancia y extraer credenciales de IAM.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- COLUMNA IZQUIERDA: ANALOGIA DEL MESERO Y EXPLICACION SSRF -->
+            <div class="glass-card p-6 space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="badge badge-orange">EL VECTOR SSRF</span>
+                <span class="text-xs font-mono text-cyan-400 font-bold">[ANALOGÍA DEL MESERO]</span>
+              </div>
+              <h3 class="text-xl font-bold text-white font-heading">El Mesero y la Oficina Restringida</h3>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                Imagina que estás en un restaurante. Tú (el cliente) <strong>no puedes entrar</strong> a la oficina privada del gerente donde está la caja fuerte (el hipervisor Nitro en <code class="text-amber-400">169.254.169.254</code>). Pero el mesero (la app web en EC2) sí tiene gafete interno y camina libremente por ahí.
+              </p>
+              <div class="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs font-mono text-amber-200">
+                Tú le dices al mesero: <em>"Tráeme lo que haya en la oficina del gerente"</em> (<code class="text-cyan-300">?url=http://169.254.169.254/...</code>). Como el mesero confía a ciegas, va, toma las llaves maestras de la caja fuerte y te las sirve en tu mesa. ¡Eso es Server-Side Request Forgery!
+              </div>
+
+              <!-- INPUT INTERACTIVO DE IP -->
+              <div class="p-3 bg-slate-950/90 rounded-lg border border-slate-800 space-y-2">
+                <div class="flex items-center justify-between">
+                  <label for="ec2-ip-input" class="text-xs font-mono text-cyan-300 font-bold">IP Pública de tu EC2 en Vivo:</label>
+                  <span class="text-xs font-mono text-emerald-400">[Auto en ./redteam]</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="text" id="ec2-ip-input" placeholder="Ej: 54.210.35.12" oninput="updateEc2TerminalIp(this.value)" class="flex-1 bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs font-mono text-white focus:outline-none focus:border-cyan-400">
+                  <button id="ssrf-copy-btn" onclick="copyDynamicSsrf(this)" class="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-mono text-xs border border-amber-500/40 transition">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar Payload
+                  </button>
+                </div>
+                <div class="text-xs font-mono text-slate-400">
+                  [INFO] Si usas <code class="text-cyan-400">./redteam</code> (opción 3) o <code class="text-cyan-400">python3 scripts/02_explotar_ssrf.py</code>, el script detecta la IP automáticamente de CloudFormation.
+                </div>
+              </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: TERMINAL EN VIVO CON LA RESPUESTA -->
+            <div class="glass-card border-glow-orange p-6 space-y-4">
+              <span class="badge badge-cyan">EXTRACCIÓN DE CREDENCIALES EN VIVO</span>
+              <div class="terminal-box text-xs space-y-1.5">
+                <div class="text-slate-400" id="ssrf-cmd-display">$ curl -s "http://&lt;EC2-IP&gt;/?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/EC2-App-Admin"</div>
+                <div class="text-cyan-400">{</div>
+                <div class="text-slate-300">&nbsp;&nbsp;"Code": "Success",</div>
+                <div class="text-amber-400">&nbsp;&nbsp;"AccessKeyId": "ASIAV67EXAMPLE...",</div>
+                <div class="text-amber-400">&nbsp;&nbsp;"SecretAccessKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCY...",</div>
+                <div class="text-amber-400">&nbsp;&nbsp;"Token": "IQoJb3JpZ2luX2VjEIz//////////...",</div>
+                <div class="text-slate-300">&nbsp;&nbsp;"Expiration": "2026-03-15T18:40:22Z"</div>
+                <div class="text-cyan-400">}</div>
+              </div>
+              <div class="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-xs font-mono text-red-300">
+                [IMPACTO CRÍTICO]: IMDSv1 no exige autenticación previa. Con una sola llamada GET se robó el token temporal de STS asignado a la EC2.
+              </div>
+            </div>
+          </div>
+
+          <!-- GLOSARIO SENCILLO PARA PRINCIPIANTES -->
+          <div class="p-3.5 rounded-xl bg-slate-900/95 border border-slate-800 text-xs space-y-1.5 font-mono">
+            <div class="text-amber-400 font-bold flex items-center gap-1.5">
+              <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
+              GLOSARIO PARA EL BUILDER: CONCEPTOS CLAVE EXPLICADOS
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-1 text-slate-300">
+              <div class="p-2 bg-slate-950/70 rounded border border-slate-800/80">
+                <strong class="text-cyan-400 block mb-0.5">1. ¿Qué es IMDS (169.254.169.254)?</strong>
+                Es el teléfono interno de AWS para cada EC2. La máquina 'descuelga' y el hipervisor le da sus datos y su rol sin meter claves a mano.
+              </div>
+              <div class="p-2 bg-slate-950/70 rounded border border-slate-800/80">
+                <strong class="text-amber-400 block mb-0.5">2. ¿Por qué IMDSv1 es vulnerable?</strong>
+                Porque responde a un simple GET. Si tu web tiene un fallo SSRF, el atacante engaña al servidor para que llame al 169.254.169.254 y le dé las llaves.
+              </div>
+              <div class="p-2 bg-slate-950/70 rounded border border-slate-800/80">
+                <strong class="text-emerald-400 block mb-0.5">3. ¿Qué son los tokens ASIA...?</strong>
+                Son credenciales temporales emitidas por AWS STS. Caducan solas en horas, a diferencia de las llaves fijas que duran para siempre.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-500 border-t border-slate-800/60 pt-3">
+          <span>Las credenciales ASIA... son temporales generadas por STS para el rol de la instancia</span>
+          <span>Slide [ 13 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 14: DEMO 03: MOVIMIENTO LATERAL -->
+      <section class="slide-page" data-slide="14">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-red">LIVE DEMO · FASE 03</span>
+          <span class="text-xs font-mono text-slate-500">MOVIMIENTO LATERAL // SOBRE-PRIVILEGIO</span>
+        </div>
+
+        <div class="my-auto space-y-6 w-full">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <h2 class="text-3xl lg:text-5xl font-black font-heading text-white">
+                Demo 03: Movimiento Lateral con Credenciales Robadas
+              </h2>
+              <p class="text-sm lg:text-base text-slate-400 mt-1">
+                El atacante exporta las credenciales temporales a su máquina local y accede a recursos que la app web jamás debió tocar.
+              </p>
+            </div>
+            <img src="imagenes/mascota_saraguato_minatitlan.png" alt="Mascota Saraguato Minatitlán" class="w-16 h-16 md:w-18 md:h-18 rounded-2xl object-cover mascot-sticker shrink-0 cursor-pointer hidden md:block" onclick="openImageModal('imagenes/mascota_saraguato_minatitlan.png', 'El Saraguato de Minatitlán: Movimiento lateral y alcance de privilegios')" title="Movimiento Lateral">
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="glass-card p-7 space-y-4">
+              <span class="badge badge-red">EL FALLO DE ARQUITECTURA</span>
+              <h3 class="text-xl font-bold text-white font-heading">El Peligro del Rol con s3:*</h3>
+              <p class="text-sm lg:text-base lg:text-sm text-slate-300 leading-relaxed italic">
+                "Eran las 2:00 AM, la aplicación marcaba <em>'Access Denied'</em> y el desarrollador, cansado y con prisa por entregar, le puso <code class="text-red-400 font-mono">s3:*</code> con <code class="text-red-400 font-mono">Resource: *</code> al rol de la EC2 <em>'para que no marcara error y ya jalara'</em>."
+              </p>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                Al día siguiente la web funcionaba, pero el rol heredó acceso a los buckets de nómina, bases de datos confidenciales y respaldos de toda la cuenta. Una sola vulnerabilidad SSRF en la web bastó para robarlo todo.
+              </p>
+              <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-xs font-mono text-red-200">
+                [PRINCIPIO VIOLADO] Menor Privilegio (PoLP): una aplicación web sólo debe tener acceso al bucket específico que consume.
+              </div>
+              <div class="flex items-center gap-2 pt-2 border-t border-slate-800">
+                <button onclick="copyToClipboard('aws sts get-caller-identity', this)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-mono text-xs border border-slate-700 transition shadow-sm">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar sts get-caller-identity
+                </button>
+              </div>
+            </div>
+
+            <div class="glass-card border-glow-red p-7 space-y-4">
+              <span class="badge badge-cyan">EXFILTRACIÓN DESDE LA MÁQUINA ATACANTE</span>
+              <div class="terminal-box text-xs space-y-1.5">
+                <div class="text-slate-400">$ export AWS_ACCESS_KEY_ID="ASIA..."</div>
+                <div class="text-slate-400">$ export AWS_SECRET_ACCESS_KEY="..."</div>
+                <div class="text-slate-400">$ export AWS_SESSION_TOKEN="..."</div>
+                <div class="text-slate-400">$ aws s3 cp s3://empresa-nomina-privada/ ./exfil/ --recursive</div>
+                <div class="text-emerald-400 font-bold">[+] download: s3://empresa-nomina-privada/salarios.xlsx to ./exfil/salarios.xlsx</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-500 border-t border-slate-800/60 pt-3">
+          <span>El compromiso de una sola EC2 escaló a la filtración completa de datos de toda la organización</span>
+          <span>Slide [ 14 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 15: EL MITO DE CLOUDTRAIL -->
+      <section class="slide-page" data-slide="15">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-orange">MONITOREO VS RESPUESTA</span>
+          <span class="text-xs font-mono text-slate-500">CLOUDTRAIL // LA ANALOGIA DE LA VECINA</span>
+        </div>
+
+        <div class="my-auto space-y-5 w-full">
+          <div>
+            <h2 class="text-3xl lg:text-5xl font-black font-heading text-white">
+              El Mito de CloudTrail: ¿La Vecina Chismosa Realmente lo Ve Todo?
+            </h2>
+            <p class="text-sm lg:text-base text-slate-400 mt-1">
+              Siempre nos dicen que CloudTrail registra todo en la nube... pero un Red Team sabe exactamente dónde está ciega.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+            <div class="glass-card p-5 space-y-3 border-l-4 border-amber-500 relative overflow-hidden">
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <img src="imagenes/mascota_cloudtrail_chismosa.png" alt="Mascota CloudTrail Chismosa" class="w-14 h-14 rounded-2xl object-contain bg-purple-950/60 p-1 border border-purple-500/40 shadow-lg cursor-pointer hover:scale-105 transition shrink-0" onclick="openImageModal('imagenes/mascota_cloudtrail_chismosa.png', 'La Analogía de la Vecina Chismosa: CloudTrail observando pasivamente')">
+                  <div>
+                    <h3 class="text-xl font-bold text-amber-400 font-heading leading-tight">La Analogía de la Vecina Chismosa</h3>
+                    <span class="text-xs font-mono text-purple-300">Monitoreo Pasivo vs Bloqueo Activo</span>
+                  </div>
+                </div>
+                <span class="badge badge-orange text-xs">EL MITO</span>
+              </div>
+              <p class="text-sm lg:text-base lg:text-sm text-slate-200 leading-relaxed">
+                CloudTrail es como la vecina que se asoma a la ventana todo el día. Lo ve todo y lo anota en su libreta: <em>"A las 3:14 AM entró alguien con pasamontañas por la ventana trasera y se llevó la televisión"</em>.
+              </p>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                La vecina anotó el hecho con exactitud milimétrica. Pero <strong>no gritó, no cerró la puerta con cerrojo ni llamó a la policía</strong>. A la mañana siguiente te entrega su libreta cuando tu casa ya está vacía.
+              </p>
+
+              <!-- LA REVELACION TECNICA -->
+              <div class="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-200 space-y-1.5 font-mono">
+                <div class="font-bold text-amber-400">[LA REVELACIÓN: LA VECINA ESTÁ CIEGA]</div>
+                <div>• <strong>Management Events</strong> (gratis por defecto): Registra aviones y camiones (crear bucket, lanzar EC2).</div>
+                <div>• <strong>Data Events</strong> (¿Quién se llevó las joyas? <code class="text-red-300">s3:GetObject</code>): <strong>¡APAGADO POR DEFECTO!</strong></div>
+                <div class="text-sm text-slate-300">Si un atacante descarga 50,000 CFDI o bases de datos de tu bucket, en tu consola no aparece absolutamente nada.</div>
+              </div>
+            </div>
+
+            <div class="glass-card border-glow-cyan p-6 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold text-cyan-400 font-heading">La Solución: Detección y Contención Activa</h3>
+                <span class="badge badge-cyan text-xs">DEFENSA ACTIVA</span>
+              </div>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                CloudTrail por sí solo es auditoría pasiva (con latencia de 5 a 15 min). Para convertirlo en un sistema de defensa real necesitas un flujo reactivo:
+              </p>
+              <div class="space-y-2.5 text-xs font-mono text-slate-300">
+                <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800 flex items-start gap-2.5">
+                  <span class="text-cyan-400 font-bold shrink-0">1. CloudTrail Dedicado:</span>
+                  <span>Crear un Trail con <strong>Data Events</strong> activos en buckets sensibles o activar <strong>Amazon GuardDuty</strong> para anomalías de exfiltración.</span>
+                </div>
+                <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800 flex items-start gap-2.5">
+                  <span class="text-amber-400 font-bold shrink-0">2. Amazon EventBridge:</span>
+                  <span>Captura en milisegundos llamadas de alto riesgo (<code class="text-amber-400">PutBucketPolicy</code> a público, <code class="text-amber-400">AssumeRole</code> desde IP externa).</span>
+                </div>
+                <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800 flex items-start gap-2.5">
+                  <span class="text-emerald-400 font-bold shrink-0">3. AWS Lambda / SNS:</span>
+                  <span>Remediación autónoma en segundos: revoca sesiones STS robadas, restaura la política de bucket y alerta por Slack/Telegram.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-500 border-t border-slate-800/60 pt-3">
+          <span>Un log que nadie revisa en tiempo real es solo una autopsia forense</span>
+          <span>Slide [ 15 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 16: REMEDIACION BLUE TEAM: BLINDAJE DEFINITIVO -->
+      <section class="slide-page" data-slide="16">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-emerald">BLUE TEAM DEFENSE</span>
+          <span class="text-xs font-mono text-slate-500">BLINDAJE ARQUITECTONICO // 3 PASOS CRITICOS</span>
+        </div>
+
+        <div class="my-auto space-y-6 w-full">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <h2 class="text-3xl lg:text-5xl font-black font-heading text-white">
+                Remediación Blue Team: Blindaje de la Arquitectura
+              </h2>
+              <p class="text-sm lg:text-base text-slate-300 mt-1">
+                Tres configuraciones que anulan por completo los vectores de ataque explotados en las demostraciones.
+              </p>
+            </div>
+            <img src="imagenes/mascota_cloud_builder.png" alt="Cloud Builder" class="w-18 h-18 md:w-20 md:h-20 rounded-2xl object-cover mascot-sticker shrink-0 cursor-pointer hidden md:block" onclick="openImageModal('imagenes/mascota_cloud_builder.png', 'Mascota Cloud Builder: Blindaje de seguridad en AWS con IMDSv2 y BPA')" title="Blue Team Builder">
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glass-card border-glow-emerald p-6 space-y-3">
+              <span class="badge badge-emerald">PASO 01</span>
+              <h3 class="text-xl font-bold text-white font-heading">Forzar IMDSv2</h3>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                Exige un token de sesión temporal previo obtenido mediante HTTP PUT con cabecera <code class="text-cyan-400">X-aws-ec2-metadata-token</code>, neutralizando ataques SSRF.
+              </p>
+              <div class="terminal-box text-xs">
+                aws ec2 modify-instance-metadata-options \<br>
+                &nbsp;&nbsp;--instance-id i-0123456789 \<br>
+                &nbsp;&nbsp;--http-tokens required
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-purple-900/40">
+                <button onclick="copyToClipboard('aws ec2 modify-instance-metadata-options --instance-id i-0123456789 --http-tokens required', this)" class="inline-flex items-center gap-1 text-xs font-mono text-cyan-400 hover:underline">
+                  <i data-lucide="copy" class="w-3 h-3"></i> Copiar Comando
+                </button>
+                <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html" target="_blank" class="text-xs font-mono text-slate-400 hover:text-amber-400 inline-flex items-center gap-1">
+                  <i data-lucide="external-link" class="w-3 h-3"></i> Doc Oficial
+                </a>
+              </div>
+            </div>
+
+            <div class="glass-card border-glow-emerald p-6 space-y-3">
+              <span class="badge badge-emerald">PASO 02</span>
+              <h3 class="text-xl font-bold text-white font-heading">S3 Block Public Access</h3>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                Aplica la restricción a nivel de cuenta u organización en AWS, anulando cualquier política de bucket pública errónea que intente crearse.
+              </p>
+              <div class="terminal-box text-xs">
+                aws s3control put-public-access-block \<br>
+                &nbsp;&nbsp;--account-id 123456789012 \<br>
+                &nbsp;&nbsp;--public-access-block-configuration ...
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-purple-900/40">
+                <button onclick="copyToClipboard('aws s3control put-public-access-block --account-id 123456789012 --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true', this)" class="inline-flex items-center gap-1 text-xs font-mono text-emerald-400 hover:underline">
+                  <i data-lucide="copy" class="w-3 h-3"></i> Copiar Comando
+                </button>
+                <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html" target="_blank" class="text-xs font-mono text-slate-400 hover:text-amber-400 inline-flex items-center gap-1">
+                  <i data-lucide="external-link" class="w-3 h-3"></i> Doc Oficial
+                </a>
+              </div>
+            </div>
+
+            <div class="glass-card border-glow-emerald p-6 space-y-3">
+              <span class="badge badge-emerald">PASO 03</span>
+              <h3 class="text-xl font-bold text-white font-heading">AWS Systems Manager</h3>
+              <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                Cierra completamente el puerto 22 SSH en los Security Groups. Conéctate a las instancias mediante SSM Session Manager con túnel TLS autenticado por IAM.
+              </p>
+              <div class="terminal-box text-xs">
+                aws ssm start-session \<br>
+                &nbsp;&nbsp;--target i-0123456789abcdef0
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-purple-900/40">
+                <button onclick="copyToClipboard('aws ssm start-session --target i-0123456789abcdef0', this)" class="inline-flex items-center gap-1 text-xs font-mono text-amber-400 hover:underline">
+                  <i data-lucide="copy" class="w-3 h-3"></i> Copiar Comando
+                </button>
+                <a href="https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html" target="_blank" class="text-xs font-mono text-slate-400 hover:text-amber-400 inline-flex items-center gap-1">
+                  <i data-lucide="external-link" class="w-3 h-3"></i> Doc Oficial
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-500 border-t border-slate-800/60 pt-3">
+          <span>Estas 3 medidas eliminan más del 90% de los vectores de explotación externa en AWS</span>
+          <span>Slide [ 16 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 17: HIGIENE DE ACCESOS: ROOT VS USUARIO IAM Y GESTORES -->
+      <section class="slide-page" data-slide="17">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-cyan">HIGIENE DE IDENTIDADES</span>
+          <span class="text-xs font-mono text-slate-500">CONSOLA AWS // ROOT VS USUARIO IAM // ZERO-KNOWLEDGE</span>
+        </div>
+
+        <div class="my-auto space-y-5 w-full">
+          <div>
+            <h2 class="text-3xl lg:text-5xl font-black font-heading text-white">
+              Higiene de Accesos: El Dilema en el Login de AWS
+            </h2>
+            <p class="text-sm lg:text-base text-slate-400 mt-1">
+              AWS te da la opción de entrar como Root en su pantalla de inicio, pero la regla de oro es: <strong>¡NUNCA la uses en tu día a día!</strong>
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+            
+            <!-- TARJETA IZQUIERDA: EL LOGIN DE AWS (ROOT VS IAM) -->
+            <div class="glass-card p-6 space-y-3.5 border-l-4 border-amber-500 flex flex-col justify-between">
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-lg lg:text-xl font-bold text-amber-400 font-heading">La Pantalla de Login de AWS: Root vs Usuario IAM</h3>
+                  <span class="badge badge-orange text-xs">LA TRAMPA</span>
+                </div>
+                <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                  Cuando entras a la consola de AWS, ves dos puertas: <strong>Usuario raíz</strong> y <strong>Usuario de IAM</strong>. La tentación del principiante es entrar siempre con Root porque <em>"es mi correo y tiene todos los permisos"</em>.
+                </p>
+                
+                <!-- CAPTURA CONSOLA AWS LOGIN -->
+                <div class="relative group rounded-xl overflow-hidden border border-slate-700/80 bg-slate-950/80 p-2 shadow-md cursor-pointer hover:border-amber-400/70 transition" onclick="openImageModal('imagenes/04_aws_login_iam_vs_root.png', 'Consola AWS: Selección entre Usuario Raíz (Root) y Usuario de IAM')">
+                  <img src="imagenes/04_aws_login_iam_vs_root.png" alt="Login AWS IAM vs Root" class="w-full h-24 md:h-28 object-contain transition duration-200 group-hover:scale-[1.02]">
+                  <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-amber-300 text-xs font-mono font-bold backdrop-blur-[1px] rounded-lg">
+                    <i data-lucide="zoom-in" class="w-4 h-4"></i>
+                    <span>Clic para ver en pantalla completa</span>
+                  </div>
+                </div>
+
+                <div class="space-y-1.5 text-xs font-mono text-slate-200">
+                  <div class="p-2.5 bg-red-500/10 border border-red-500/30 rounded">
+                    <strong class="text-red-400 font-bold block mb-0.5">[PELIGRO] Usuario Raíz (Root):</strong>
+                    Poder absoluto e irrevocable. No se le pueden aplicar SCPs que lo restrinjan. Si se filtra esa credencial, te secuestran toda la cuenta.
+                  </div>
+                  <div class="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded">
+                    <strong class="text-emerald-400 font-bold block mb-0.5">[REGLA DE ORO] Usuario de IAM / Identity Center + MFA:</strong>
+                    La cuenta Root se guarda con <strong>MFA físico (YubiKey/FIDO2)</strong> bajo llave solo para emergencias. El trabajo diario se hace <strong>SIEMPRE con Usuario de IAM y MFA obligatorio</strong>.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TARJETA DERECHA: GESTORES DE CONTRASENAS Y TOTP -->
+            <div class="glass-card border-glow-cyan p-6 space-y-3.5 flex flex-col justify-between">
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-lg lg:text-xl font-bold text-cyan-400 font-heading">Gestores Auditados y MFA: Cero Texto Plano</h3>
+                  <span class="badge badge-cyan text-xs">ZERO-KNOWLEDGE</span>
+                </div>
+                <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                  ¿Dónde guardan muchos sus contraseñas? En un <code class="text-amber-400">claves.txt</code> en el escritorio o en el autocompletar del navegador. Una sola infección por malware exfiltra todas tus credenciales.
+                </p>
+                
+                <!-- CAPTURA VAULTWARDEN -->
+                <div class="relative group rounded-xl overflow-hidden border border-slate-700/80 bg-slate-950/80 p-2 shadow-md cursor-pointer hover:border-cyan-400/70 transition" onclick="openImageModal('imagenes/05_gestor_contrasenas_vaultwarden.jpeg', 'Gestor de Contraseñas y Generador TOTP 2FA (Vaultwarden / Bitwarden Zero-Knowledge)')">
+                  <img src="imagenes/05_gestor_contrasenas_vaultwarden.jpeg" alt="Vaultwarden" class="w-full h-24 md:h-28 object-contain transition duration-200 group-hover:scale-[1.02]">
+                  <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-cyan-300 text-xs font-mono font-bold backdrop-blur-[1px] rounded-lg">
+                    <i data-lucide="zoom-in" class="w-4 h-4"></i>
+                    <span>Clic para ver en pantalla completa</span>
+                  </div>
+                </div>
+
+                <ul class="text-xs font-mono text-slate-300 space-y-2 pt-1">
+                  <li class="flex items-start gap-2">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5"></i>
+                    <span><strong>Vaultwarden / Bitwarden:</strong> Código abierto auditado con cifrado AES-256 en cliente antes de tocar la red (Zero-Knowledge).</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5"></i>
+                    <span><strong>Generador TOTP 2FA Integrado:</strong> Genera códigos de autenticación temporales sin depender de SMS (inmune a ataques de SIM Swapping).</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-cyan-400 shrink-0 mt-0.5"></i>
+                    <span><strong>Sin Access Keys permanentes:</strong> Uso de contraseñas de alta entropía (30+ caracteres) y sesiones efímeras con AWS STS.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-400 border-t border-purple-900/40 pt-3">
+          <span class="flex items-center gap-3">
+            <span>Root = Bóveda bajo llave física // IAM + MFA = Diario</span>
+            <span class="text-purple-500">/</span>
+            <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html" target="_blank" class="text-amber-400 hover:underline inline-flex items-center gap-1">
+              <i data-lucide="external-link" class="w-3 h-3"></i> AWS IAM Best Practices
+            </a>
+            <span class="text-purple-500">/</span>
+            <a href="https://bitwarden.com" target="_blank" class="text-cyan-400 hover:underline inline-flex items-center gap-1">
+              <i data-lucide="external-link" class="w-3 h-3"></i> Bitwarden / Vaultwarden
+            </a>
+          </span>
+          <span>Slide [ 17 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 18: RUTAS OFICIALES CON BADGES GRATUITOS -->
+      <section class="slide-page" data-slide="18">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-emerald">FORMACION CONTINUA GRATUITA</span>
+          <span class="text-xs font-mono text-slate-500">ESCANEA Y APRENDE // CERTIFICACIONES & BADGES</span>
+        </div>
+
+        <div class="my-auto space-y-5 w-full">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <h2 class="text-3xl lg:text-5xl font-black font-heading text-white">
+                Rutas Oficiales con Badges Gratuitos
+              </h2>
+              <p class="text-sm lg:text-base text-slate-400 mt-1">
+                Plataformas oficiales de formación reconocidas en la industria para construir una carrera sólida en ciberseguridad y cloud.
+              </p>
+            </div>
+            <img src="imagenes/mascota_comunidad_veracruz.png" alt="Mascota Comunidad Veracruz" class="w-16 h-16 md:w-18 md:h-18 rounded-2xl object-cover mascot-sticker shrink-0 cursor-pointer hidden md:block" onclick="openImageModal('imagenes/mascota_comunidad_veracruz.png', 'Comunidad Veracruz: ¡Aprender, certificarse y crecer juntos!')" title="¡Badges y Certificaciones!">
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- TARJETA 1: AWS SKILL BUILDER -->
+            <div class="glass-card p-5 flex flex-col justify-between space-y-3 border-t-4 border-amber-400">
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-base font-bold text-amber-400 font-heading">AWS Skill Builder</h3>
+                  <span class="badge badge-orange text-xs">OFICIAL AWS</span>
+                </div>
+                <!-- IMAGEN COMPLETA SIN RECORTAR -->
+                <div class="relative group rounded-lg overflow-hidden border border-slate-700/80 bg-slate-950/80 p-1 shadow cursor-pointer hover:border-amber-400/70 transition" onclick="openImageModal('imagenes/01_aws_skillbuilder_security.png', 'AWS Skill Builder: Catálogo Oficial de Cursos Gratuitos de Seguridad e IAM')">
+                  <img src="imagenes/01_aws_skillbuilder_security.png" alt="AWS Skill Builder" class="w-full h-20 md:h-24 object-contain transition duration-200 group-hover:scale-[1.02]">
+                  <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-amber-300 text-xs font-mono font-bold backdrop-blur-[1px] rounded-lg">
+                    <i data-lucide="zoom-in" class="w-3.5 h-3.5"></i>
+                    <span>Clic para ampliar</span>
+                  </div>
+                </div>
+                <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                  Catálogo oficial gratuito de AWS en seguridad, identidad, IAM y cumplimiento normativo con insignias digitales para Credly.
+                </p>
+              </div>
+
+              <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                <div class="bg-white p-2 rounded-xl shadow-md shrink-0 cursor-pointer hover:scale-105 transition" onclick="openImageModal('imagenes/qr_aws_skillbuilder.png', 'Código QR: Acceso a AWS Skill Builder (Seguridad e IAM)')">
+                  <img src="imagenes/qr_aws_skillbuilder.png" alt="QR AWS Skill Builder" class="w-14 h-14 md:w-16 md:h-16 object-contain">
+                </div>
+                <div class="text-right space-y-1">
+                  <span class="text-xs font-mono text-slate-400 block">Escanea o haz clic</span>
+                  <a href="https://skillbuilder.aws/category/domain/security-identity-and-compliance?pageSize=5&page=1&accessTier=free" target="_blank" class="inline-flex items-center gap-1 text-xs font-mono text-amber-400 hover:underline">
+                    <i data-lucide="external-link" class="w-3 h-3"></i> skillbuilder.aws
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- TARJETA 2: CISCO NETWORKING ACADEMY -->
+            <div class="glass-card p-5 flex flex-col justify-between space-y-3 border-t-4 border-cyan-400">
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-base font-bold text-cyan-400 font-heading">Cisco NetAcad</h3>
+                  <span class="badge badge-cyan text-xs">EN ESPAÑOL</span>
+                </div>
+                <!-- IMAGEN COMPLETA SIN RECORTAR -->
+                <div class="relative group rounded-lg overflow-hidden border border-slate-700/80 bg-slate-950/80 p-1 shadow cursor-pointer hover:border-cyan-400/70 transition" onclick="openImageModal('imagenes/02_cisco_netacad_cybersecurity.png', 'Cisco Networking Academy: Ciberseguridad & Cisco Ethical Hacker')">
+                  <img src="imagenes/02_cisco_netacad_cybersecurity.png" alt="Cisco NetAcad" class="w-full h-20 md:h-24 object-contain transition duration-200 group-hover:scale-[1.02]">
+                  <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-cyan-300 text-xs font-mono font-bold backdrop-blur-[1px] rounded-lg">
+                    <i data-lucide="zoom-in" class="w-3.5 h-3.5"></i>
+                    <span>Clic para ampliar</span>
+                  </div>
+                </div>
+                <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                  Ruta oficial de Cisco en Fundamentos de Ciberseguridad, Defensa de Redes y la credencial oficial de Cisco Ethical Hacker.
+                </p>
+              </div>
+
+              <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                <div class="bg-white p-2 rounded-xl shadow-md shrink-0 cursor-pointer hover:scale-105 transition" onclick="openImageModal('imagenes/qr_cisco_netacad.png', 'Código QR: Acceso a Cisco Networking Academy (Ciberseguridad)')">
+                  <img src="imagenes/qr_cisco_netacad.png" alt="QR Cisco NetAcad" class="w-14 h-14 md:w-16 md:h-16 object-contain">
+                </div>
+                <div class="text-right space-y-1">
+                  <span class="text-xs font-mono text-slate-400 block">Escanea o haz clic</span>
+                  <a href="https://www.netacad.com/es/cybersecurity" target="_blank" class="inline-flex items-center gap-1 text-xs font-mono text-cyan-400 hover:underline">
+                    <i data-lucide="external-link" class="w-3 h-3"></i> netacad.com
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- TARJETA 3: OFFSEC ACADEMY -->
+            <div class="glass-card p-5 flex flex-col justify-between space-y-3 border-t-4 border-red-400">
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-base font-bold text-red-400 font-heading">OffSec Academy</h3>
+                  <span class="badge badge-red text-xs">RED TEAM LABS</span>
+                </div>
+                <!-- IMAGEN COMPLETA SIN RECORTAR -->
+                <div class="relative group rounded-lg overflow-hidden border border-slate-700/80 bg-slate-950/80 p-1 shadow cursor-pointer hover:border-red-400/70 transition" onclick="openImageModal('imagenes/03_offsec_certifications.png', 'OffSec Academy: Seguridad Ofensiva y Ruta OSCP')">
+                  <img src="imagenes/03_offsec_certifications.png" alt="OffSec" class="w-full h-20 md:h-24 object-contain transition duration-200 group-hover:scale-[1.02]">
+                  <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-red-300 text-xs font-mono font-bold backdrop-blur-[1px] rounded-lg">
+                    <i data-lucide="zoom-in" class="w-3.5 h-3.5"></i>
+                    <span>Clic para ampliar</span>
+                  </div>
+                </div>
+                <p class="text-sm lg:text-base text-slate-300 leading-relaxed">
+                  Seguridad ofensiva avanzada de la mano de los creadores de Kali Linux y la prestigiosa certificación técnica OSCP.
+                </p>
+              </div>
+
+              <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                <div class="bg-white p-2 rounded-xl shadow-md shrink-0 cursor-pointer hover:scale-105 transition" onclick="openImageModal('imagenes/qr_offsec.png', 'Código QR: Acceso a OffSec Academy')">
+                  <img src="imagenes/qr_offsec.png" alt="QR OffSec" class="w-14 h-14 md:w-16 md:h-16 object-contain">
+                </div>
+                <div class="text-right space-y-1">
+                  <span class="text-xs font-mono text-slate-400 block">Escanea o haz clic</span>
+                  <a href="https://www.offsec.com/" target="_blank" class="inline-flex items-center gap-1 text-xs font-mono text-red-400 hover:underline">
+                    <i data-lucide="external-link" class="w-3 h-3"></i> offsec.com
+                  </a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RECURSO EXCLUSIVO: PORTAL Y GUIA DE OPORTUNIDADES Y BECAS AWS 2026 -->
+          <div class="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 via-slate-900 to-cyan-500/10 border border-amber-500/40 flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg">
+            <div class="flex items-center gap-3">
+              <div class="p-2.5 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-400 shrink-0">
+                <i data-lucide="globe" class="w-6 h-6"></i>
+              </div>
+              <div class="space-y-0.5">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-sm font-bold text-white font-heading">Portal Oficial de Oportunidades y Becas AWS 2026</span>
+                  <span class="badge badge-orange text-xs">20 PROGRAMAS ACTIVOS</span>
+                  <span class="badge badge-emerald text-xs">WEB & PDF DISPONIBLES</span>
+                </div>
+                <p class="text-sm lg:text-base text-slate-300">
+                  Desarrollado y compilado por Roberto Flores (AWS All Builders Welcome Grantee). Incluye: All Builders Welcome Grant, AWS AI & ML Scholars (4,500 becas Udacity), AWS re/Start, Educate y DeepRacer.
+                </p>
+                <div class="text-xs font-mono text-amber-400">
+                  Enlace oficial: <a href="https://awsugplayavicente.com/oportunidades" target="_blank" class="underline hover:text-white">awsugplayavicente.com/oportunidades</a>
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <a href="https://awsugplayavicente.com/oportunidades" target="_blank" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold font-mono text-xs shadow-md transition">
+                <i data-lucide="external-link" class="w-4 h-4"></i> Ir al Sitio Web Oficial
+              </a>
+              <a href="Guia_Oportunidades_Becas_AWS_2026.pdf" target="_blank" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-cyan-300 font-mono text-xs transition">
+                <i data-lucide="file-down" class="w-4 h-4"></i> Descargar PDF
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-500 border-t border-slate-800/60 pt-3">
+          <span>Insignias oficiales verificables en plataformas globales como Credly</span>
+          <span>Slide [ 18 / 19 ]</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 19: CIERRE, COMUNIDADES HERMANAS Y QR CODES -->
+      <section class="slide-page" data-slide="19">
+        <div class="flex items-center justify-between">
+          <span class="badge badge-emerald">DE LA COMUNIDAD PARA LA COMUNIDAD</span>
+          <span class="text-xs font-mono text-slate-500">COMUNIDADES HERMANAS // CONEXION CONTINUA</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto w-full">
+          <div class="lg:col-span-6 space-y-5">
+            <div>
+              <h2 class="text-3xl lg:text-5xl font-black font-heading text-white leading-tight">
+                La Seguridad no es un Destino, es una Disciplina
+              </h2>
+              <p class="text-sm lg:text-base text-slate-400 mt-1">
+                4 principios fundamentales para llevarte hoy a tus proyectos y arquitecturas.
+              </p>
+            </div>
+
+            <ul class="space-y-3 text-xs lg:text-sm text-slate-300 font-mono">
+              <li class="flex items-center gap-3 p-3 rounded-lg bg-slate-900/60 border border-slate-800">
+                <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400 shrink-0"></i>
+                <span>Cero credenciales permanentes: adopta roles IAM y sesiones temporales STS.</span>
+              </li>
+              <li class="flex items-center gap-3 p-3 rounded-lg bg-slate-900/60 border border-slate-800">
+                <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400 shrink-0"></i>
+                <span>Forzar IMDSv2 en todas tus instancias para anular ataques SSRF.</span>
+              </li>
+              <li class="flex items-center gap-3 p-3 rounded-lg bg-slate-900/60 border border-slate-800">
+                <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400 shrink-0"></i>
+                <span>S3 Block Public Access a nivel de cuenta para proteger datos confidenciales.</span>
+              </li>
+              <li class="flex items-center gap-3 p-3 rounded-lg bg-slate-900/60 border border-slate-800">
+                <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400 shrink-0"></i>
+                <span>Eliminar SSH (puerto 22) abierto al mundo y administrar vía AWS Systems Manager.</span>
+              </li>
+            </ul>
+
+            <!-- TARJETA ILUSTRADA DE CELEBRACION COMUNITARIA -->
+            <div class="p-3 rounded-xl border border-purple-500/30 bg-purple-950/40 flex items-center gap-4 shadow-md">
+              <img src="imagenes/mascota_comunidad_veracruz.png" alt="Comunidad Veracruz Certificaciones" class="w-16 h-16 rounded-xl object-contain bg-slate-950/70 p-1 border border-purple-500/40 shadow shrink-0 cursor-pointer hover:scale-105 transition" onclick="openImageModal('imagenes/mascota_comunidad_veracruz.png', 'Celebración Comunitaria Veracruz: Certificaciones y Crecimiento en la Nube')">
+              <div class="space-y-0.5">
+                <span class="text-xs font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-purple-300 to-emerald-400 block">
+                  ¡Talento Jarocho para el Mundo!
+                </span>
+                <p class="text-sm lg:text-base text-slate-300 font-mono">
+                  Portal: <a href="https://awsugplayavicente.com" target="_blank" class="text-amber-400 font-bold hover:underline">awsugplayavicente.com</a>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- TARJETA FINAL DE CONTACTO Y COMUNIDADES -->
+          <div class="lg:col-span-6">
+            <div class="glass-card border-glow-orange p-6 text-center space-y-5">
+              <div>
+                <span class="badge badge-orange">CONECTEMOS Y SIGAMOS APRENDIENDO</span>
+                <h3 class="text-2xl font-bold font-heading text-white mt-2">
+                  Construyamos Juntos en Comunidad
+                </h3>
+                <p class="text-sm lg:text-base text-slate-400 mt-1">
+                  Encuentros, talleres prácticos, laboratorios abiertos y mentoría técnica.
+                </p>
+              </div>
+
+              <!-- DOS CODIGOS QR ESCANABLES CON FONDO BLANCO LIMPIO -->
+              <div class="grid grid-cols-2 gap-4">
+                
+                <!-- QR ROBERTO FLORES -->
+                <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+                  <div class="bg-white p-2 rounded-xl shadow-md inline-block cursor-pointer hover:scale-105 transition" onclick="openImageModal('imagenes/qr_linktree_siegfried.png', 'Código QR: Roberto Flores (Siegfried) - linktr.ee/siegfried.fs')">
+                    <img src="imagenes/qr_linktree_siegfried.png" alt="QR Siegfried" class="w-16 h-16 md:w-20 md:h-20 object-contain">
+                  </div>
+                  <div class="text-xs font-bold text-white font-heading">Roberto Flores (Siegfried)</div>
+                  <div class="text-xs font-mono text-cyan-400">Founder & Speaker</div>
+                  <a href="https://linktr.ee/siegfried.fs" target="_blank" class="text-xs font-mono text-slate-400 hover:text-cyan-400 block truncate">
+                    linktr.ee/siegfried.fs
+                  </a>
+                </div>
+
+                <!-- QR AWS USER GROUP PLAYA VICENTE -->
+                <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+                  <div class="bg-white p-2 rounded-xl shadow-md inline-block cursor-pointer hover:scale-105 transition" onclick="openImageModal('imagenes/qr_linktree_ug_playavicente.png', 'Código QR: AWS User Group Playa Vicente')">
+                    <img src="imagenes/qr_linktree_ug_playavicente.png" alt="QR UG Playa Vicente" class="w-16 h-16 md:w-20 md:h-20 object-contain">
+                  </div>
+                  <div class="text-xs font-bold text-white font-heading">AWS UG Playa Vicente</div>
+                  <div class="text-xs font-mono text-amber-400">Comunidad Hermana</div>
+                  <a href="https://linktr.ee/awsusergroupplayavicente" target="_blank" class="text-xs font-mono text-slate-400 hover:text-amber-400 block truncate">
+                    linktr.ee/awsusergroupplayavicente
+                  </a>
+                </div>
+
+              </div>
+
+              <!-- HOST CALLOUT CON LOGO DE MINATITLAN DESTACADO Y TRANSPARENTE -->
+              <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-xs font-mono text-slate-300 flex items-center justify-between gap-3 shadow-md">
+                <div class="flex items-center gap-3">
+                  <img src="imagenes/logo_aws_ug_minatitlan.png" alt="AWS UG Minatitlán" class="w-12 h-12 object-contain rounded-lg bg-slate-950/60 p-1 border border-cyan-400/40 shrink-0">
+                  <div class="text-left">
+                    <span class="text-xs text-slate-400 block uppercase font-bold">Comunidad Anfitriona</span>
+                    <strong class="text-amber-400 text-base">AWS User Group Minatitlán</strong>
+                  </div>
+                </div>
+                <span class="badge badge-cyan text-xs">ORGANIZADOR</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-500 border-t border-slate-800/60 pt-3">
+          <span>Construyendo conocimiento colaborativo en la nube y ciberseguridad desde Veracruz</span>
+          <span>Slide [ 19 / 19 ]</span>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- MODAL / LIGHTBOX PARA AMPLIAR IMÁGENES EN ALTA RESOLUCIÓN -->
+    <div id="image-modal" class="fixed inset-0 z-50 bg-slate-950/92 backdrop-blur-md hidden flex-col items-center justify-center p-4 lg:p-8" onclick="closeImageModal(event)">
+      <div class="relative max-w-5xl w-full flex flex-col items-center" onclick="event.stopPropagation()">
+        <!-- Barra superior con titulo y boton cerrar -->
+        <div class="flex items-center justify-between w-full mb-3 px-2">
+          <div class="flex items-center gap-2">
+            <i data-lucide="maximize-2" class="w-4 h-4 text-cyan-400"></i>
+            <span id="modal-caption" class="text-sm font-mono text-white font-bold truncate"></span>
+          </div>
+          <button type="button" onclick="closeImageModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono border border-slate-600 transition shadow cursor-pointer">
+            <i data-lucide="x" class="w-4 h-4 text-red-400"></i>
+            <span>Cerrar [ESC]</span>
+          </button>
+        </div>
+
+        <!-- Contenedor de la Imagen Ampliada -->
+        <div class="rounded-2xl overflow-hidden border-2 border-slate-700/80 shadow-2xl bg-slate-950 p-2 max-h-[82vh] flex items-center justify-center w-full">
+          <img id="modal-img" src="" alt="Vista ampliada" class="max-w-full max-h-[78vh] w-auto h-auto object-contain rounded-xl select-auto">
+        </div>
+
+        <!-- Pie del modal -->
+        <div class="mt-2 text-right w-full px-2 text-xs font-mono text-slate-400">
+          <span>Presiona [ESC] o haz clic fuera para volver a la presentación</span>
+        </div>
+      </div>
+    </div>
+
+    
+
+  </div>
+
+  <!-- CANVAS INTERACTIVO DE PARTICULAS Y RED DE NODOS CYBER -->
+  <script>
+    const canvas = document.getElementById('cyber-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = [];
+    let mouse = { x: null, y: null, radius: 140 };
+
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+    window.addEventListener('mouseout', () => {
+      mouse.x = null;
+      mouse.y = null;
+    });
+
+    // 3D Isometric Floating Cubes (Flyer Theme: Violet + AWS Orange)
+    class IsoCube {
+      constructor(init = false) {
+        this.reset(init);
+      }
+      reset(init = false) {
+        this.x = Math.random() * width;
+        this.y = init ? Math.random() * height : height + 50;
+        this.size = Math.random() * 16 + 10;
+        this.vy = -(Math.random() * 0.4 + 0.15);
+        this.vx = (Math.random() - 0.5) * 0.25;
+        this.alpha = Math.random() * 0.4 + 0.2;
+        this.wireframe = Math.random() > 0.45;
+      }
+      update() {
+        this.y += this.vy;
+        this.x += this.vx;
+        if (this.y < -60) this.reset();
+      }
+      draw() {
+        const h = this.size * 0.577;
+        const x = this.x;
+        const y = this.y;
+        const s = this.size;
+        const a = this.alpha;
+
+        if (this.wireframe) {
+          ctx.strokeStyle = "rgba(168, 85, 247, " + (a * 0.7) + ")";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, y - h);
+          ctx.lineTo(x + s, y - h * 0.5);
+          ctx.lineTo(x, y);
+          ctx.lineTo(x - s, y - h * 0.5);
+          ctx.closePath();
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(x, y); ctx.lineTo(x, y + h);
+          ctx.moveTo(x + s, y - h * 0.5); ctx.lineTo(x + s, y + h * 0.5);
+          ctx.moveTo(x - s, y - h * 0.5); ctx.lineTo(x - s, y + h * 0.5);
+          ctx.lineTo(x, y + h);
+          ctx.lineTo(x + s, y + h * 0.5);
+          ctx.stroke();
+        } else {
+          // Top Face (Light Purple)
+          ctx.beginPath();
+          ctx.moveTo(x, y - h);
+          ctx.lineTo(x + s, y - h * 0.5);
+          ctx.lineTo(x, y);
+          ctx.lineTo(x - s, y - h * 0.5);
+          ctx.closePath();
+          ctx.fillStyle = "rgba(168, 85, 247, " + (a * 0.75) + ")";
+          ctx.fill();
+          ctx.strokeStyle = "rgba(216, 180, 254, " + (a * 0.85) + ")";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+
+          // Left Face (Deep Indigo/Violet)
+          ctx.beginPath();
+          ctx.moveTo(x - s, y - h * 0.5);
+          ctx.lineTo(x, y);
+          ctx.lineTo(x, y + h);
+          ctx.lineTo(x - s, y + h * 0.5);
+          ctx.closePath();
+          ctx.fillStyle = "rgba(109, 40, 217, " + (a * 0.8) + ")";
+          ctx.fill();
+          ctx.strokeStyle = "rgba(147, 51, 234, " + (a * 0.85) + ")";
+          ctx.stroke();
+
+          // Right Face (AWS Vibrant Orange)
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + s, y - h * 0.5);
+          ctx.lineTo(x + s, y + h * 0.5);
+          ctx.lineTo(x, y + h);
+          ctx.closePath();
+          ctx.fillStyle = "rgba(255, 107, 0, " + (a * 0.85) + ")";
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255, 170, 50, " + (a * 0.9) + ")";
+          ctx.stroke();
+        }
+      }
+    }
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 0.4;
+        this.vy = (Math.random() - 0.5) * 0.4;
+        this.radius = Math.random() * 2 + 1;
+        const colors = ['#a855f7', '#ff6b00', '#c084fc', '#ff9900', '#10b981'];
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+        this.baseAlpha = Math.random() * 0.4 + 0.2;
+        this.pulse = Math.random() * Math.PI;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.pulse += 0.02;
+        if (this.x < 0 || this.x > width) this.vx *= -1;
+        if (this.y < 0 || this.y > height) this.vy *= -1;
+      }
+      draw() {
+        const a = this.baseAlpha + Math.sin(this.pulse) * 0.15;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = Math.max(0.1, a);
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = this.color;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    const cubes = [];
+    for (let i = 0; i < 14; i++) {
+      cubes.push(new IsoCube(true));
+    }
+    for (let i = 0; i < 40; i++) {
+      particles.push(new Particle());
+    }
+
+    function animateCanvas() {
+      ctx.clearRect(0, 0, width, height);
+
+      // Tech Grid Network Lines (Purple & Orange)
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < 110) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = '#a855f7';
+            ctx.globalAlpha = (1 - dist / 110) * 0.12;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+        }
+      }
+
+      for (let p of particles) {
+        p.update();
+        p.draw();
+      }
+
+      for (let c of cubes) {
+        c.update();
+        c.draw();
+      }
+
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(animateCanvas);
+    }
+  </script>
+
+  <!-- CONTROL DE NAVEGACION, COPIADO AL PORTAPAPELES Y ANIMACIONES GSAP -->
+  <script>
+    const slides = document.querySelectorAll('.slide-page');
+    const counter = document.getElementById('slide-counter');
+    const progressBar = document.getElementById('progress-bar');
+    const headerTitle = document.getElementById('header-title');
+    const headerBadge = document.getElementById('header-badge');
+    let currentSlide = 0;
+
+    const titles = [
+      "¿Tu Nube está Expuesta? Anatomía de un Ataque en AWS",
+      "Sobre el Ponente: Roberto Flores Segundo | Founder AuditFlow",
+      "Estructura del Taller: Ruta de Navegación Técnica",
+      "El Contexto Real en México y Latinoamérica",
+      "Desmitificación: ¿Quién Ataca Realmente la Nube?",
+      "Métricas de Oro: La Velocidad del Compromiso",
+      "OSINT: ¿Por Qué Google Dorking No Indexa Todo S3?",
+      "OWASP Top 10 Reflejado en Arquitecturas Cloud",
+      "Anatomía de las Cabeceras de Seguridad HTTP",
+      "Security Headers: La Trampa de la IA y la Camisa",
+      "Topología del Laboratorio de Explotación",
+      "Demo 01: Fuga de Datos Sensibles en Amazon S3",
+      "Demo 02: SSRF en EC2 y Robo de Tokens desde IMDSv1",
+      "Demo 03: Movimiento Lateral con Credenciales Robadas",
+      "El Mito de CloudTrail: ¿La Vecina Chismosa Realmente lo Ve Todo?",
+      "Remediación Blue Team: Blindaje de la Arquitectura",
+      "Higiene de Accesos: El Dilema en el Login de AWS (Root vs IAM)",
+      "Rutas Oficiales con Badges Gratuitos",
+      "Conclusiones y Conexiones Comunitarias"
+    ];
+
+    const badges = [
+      "HOST: AWS UG MINATITLAN",
+      "FOUNDER & AUDITOR",
+      "AGENDA & RUTA",
+      "CONTEXTO LATAM",
+      "PERFIL ATACANTE",
+      "METRICAS OFICIALES",
+      "OSINT & RECON",
+      "OWASP TOP 10",
+      "SECURITY HEADERS",
+      "AWS AMPLIFY",
+      "ARQUITECTURA LAB",
+      "DEMO 1: S3 LEAK",
+      "DEMO 2: SSRF IMDS",
+      "DEMO 3: LATERAL",
+      "MITO CLOUDTRAIL",
+      "BLUE REMEDIATION",
+      "HIGIENE ACCESOS",
+      "RUTAS DE ESTUDIO",
+      "COMUNIDADES HERMANAS"
+    ];
+
+    function copyToClipboard(text, btn) {
+      if (!navigator.clipboard) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      } else {
+        navigator.clipboard.writeText(text);
+      }
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i> Copiado!';
+      if (window.lucide) lucide.createIcons();
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        if (window.lucide) lucide.createIcons();
+      }, 2000);
+    }
+
+    function updateEc2TerminalIp(val) {
+      const ip = val.trim() || '<EC2-IP>';
+      const elem = document.getElementById('ssrf-cmd-display');
+      if (elem) {
+        elem.textContent = `$ curl -s "http://${ip}/?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/EC2-App-Admin"`;
+      }
+    }
+
+    function copyDynamicSsrf(btn) {
+      const input = document.getElementById('ec2-ip-input');
+      const ip = (input && input.value.trim()) ? input.value.trim() : '<EC2-IP>';
+      const cmd = `curl -s "http://${ip}/?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/EC2-App-Admin"`;
+      copyToClipboard(cmd, btn);
+    }
+
+    function showSlide(index) {
+      if (index < 0 || index >= slides.length) return;
+      
+      const prev = slides[currentSlide];
+      const next = slides[index];
+
+      prev.classList.remove('active');
+      prev.style.display = 'none';
+
+      next.style.display = 'flex';
+      next.classList.add('active');
+
+      // Animacion suave de entrada con GSAP
+      if (window.gsap) {
+        gsap.fromTo(next, 
+          { opacity: 0, y: 10, scale: 0.99 }, 
+          { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "power2.out" }
+        );
+      } else {
+        next.style.opacity = 1;
+      }
+
+      currentSlide = index;
+
+      const cur = (currentSlide + 1).toString().padStart(2, '0');
+      const tot = slides.length.toString().padStart(2, '0');
+      if (counter) if (counter) counter.textContent = `${cur} / ${tot}`;
+      progressBar.style.width = `${((currentSlide + 1) / slides.length) * 100}%`;
+      headerTitle.textContent = titles[currentSlide] || "Tu Nube Expuesta";
+      headerBadge.textContent = badges[currentSlide] || "AWS MEETUP";
+    }
+
+    function nextSlide() {
+      if (currentSlide < slides.length - 1) {
+        showSlide(currentSlide + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        showSlide(currentSlide - 1);
+      }
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // Modal / Lightbox para ver imágenes en alta resolución
+    const imageModal = document.getElementById('image-modal');
+    const modalImg = document.getElementById('modal-img');
+    const modalCaption = document.getElementById('modal-caption');
+
+    function openImageModal(src, caption) {
+      if (!imageModal || !modalImg) return;
+      modalImg.src = src;
+      modalImg.alt = caption || 'Vista previa ampliada';
+      modalCaption.textContent = caption || '';
+      imageModal.classList.remove('hidden');
+      imageModal.classList.add('flex');
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    }
+
+    function closeImageModal(e) {
+      if (e && e.target !== imageModal && !e.target.closest('button')) return;
+      if (!imageModal) return;
+      imageModal.classList.add('hidden');
+      imageModal.classList.remove('flex');
+      if (modalImg) modalImg.src = '';
+    }
+
+    // Atajos de teclado para navegacion durante la exposicion
+    document.addEventListener('keydown', (e) => {
+      // Si el modal de ampliación de imagen está abierto
+      if (imageModal && !imageModal.classList.contains('hidden')) {
+        if (e.key === 'Escape') {
+          closeImageModal();
+          e.preventDefault();
+        }
+        return; // No cambiar de diapositiva mientras se visualiza una imagen
+      }
+
+      if (e.key === 'ArrowRight' || e.key === 'Space') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        prevSlide();
+      } else if (e.key.toLowerCase() === 'f') {
+        toggleFullScreen();
+      } else if (e.key.toLowerCase() === 'p') {
+        window.print();
+      }
+    });
+
+    // Dorks específicos en servicios de AWS (S3, Amplify, Elastic Beanstalk, CloudFront)
+    let currentAwsDork = 'site:s3.amazonaws.com "cfdi" ext:xml';
+
+    function updateAwsDorkPreview() {
+      const select = document.getElementById('aws-dork-select');
+      const preview = document.getElementById('aws-dork-preview');
+      if (!select || !preview) return;
+
+      const service = select.value;
+      if (service === 's3') {
+        currentAwsDork = 'site:s3.amazonaws.com "cfdi" ext:xml';
+      } else if (service === 'amplify') {
+        currentAwsDork = 'site:amplifyapp.com "staging" OR "dev" OR "test"';
+      } else if (service === 'beanstalk') {
+        currentAwsDork = 'site:elasticbeanstalk.com inurl:swagger OR inurl:api-docs';
+      } else if (service === 'cloudfront') {
+        currentAwsDork = 'site:cloudfront.net "AKIA" OR "aws_access_key_id"';
+      }
+
+      preview.textContent = currentAwsDork;
+      preview.title = currentAwsDork;
+    }
+
+    function launchAwsDorkSearch() {
+      if (!currentAwsDork) {
+        updateAwsDorkPreview();
+      }
+      const url = `https://www.google.com/search?q=${encodeURIComponent(currentAwsDork)}`;
+      window.open(url, '_blank');
+    }
+
+    // Inicializar iconos de Lucide y soporte para parametro ?slide=N
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+      updateAwsDorkPreview();
+      const urlParams = new URLSearchParams(window.location.search);
+      const slideParam = urlParams.get('slide');
+      let initialSlide = 0;
+      if (slideParam) {
+        const num = parseInt(slideParam, 10) - 1;
+        if (!isNaN(num) && num >= 0 && num < slides.length) {
+          initialSlide = num;
+        }
+      }
+      showSlide(initialSlide);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+# Credenciales y archivos temporales de pruebas
+*.json
+!infra/
+*.log
+.env
+__pycache__/
+*.pyc
+
+# Material privado del speaker, guías personales y transcripciones
+privado/
+docs/
+notas_speaker/
+*.vtt
+talk_transcript.txt
+
+# Capturas, evidencias y artículos locales para AWS Builder Center
+evidencias/
+evidenicas/
+Captura de pantalla*.png
+CAMPOS*.txt
+ARTICULO*.md
+scripts/generate_pro_flows.py
+
+# Agentes de IA y configuración interna
+.agents/
+.gemini/
+
+# OS
+.DS_Store
+Thumbs.db
